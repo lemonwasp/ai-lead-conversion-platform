@@ -85,5 +85,5 @@ For the historical boundary and attribution policy, see
 
 ## License
 
-No license has been selected yet. Copyright and attribution boundaries will be
-confirmed before the repository becomes public.
+No license has been selected yet. Copyright, licensing, and attribution boundaries
+will be reviewed before any external reuse or distribution.
