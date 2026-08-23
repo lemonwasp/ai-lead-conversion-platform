@@ -1,8 +1,8 @@
-# Synthetic Data and Preprocessing Pipeline
+# Synthetic Data, Preprocessing, and EDA Pipeline
 
-This document defines the public dataset and preprocessing boundary used by the
-2026 reconstruction. The dataset is generated from code in this repository and is
-not derived from the historical corporate CRM export.
+This document defines the public data workflow used by the 2026 reconstruction.
+The dataset is generated from code in this repository and is not derived from the
+historical corporate CRM export.
 
 ## Dataset schema
 
@@ -29,44 +29,46 @@ not derived from the historical corporate CRM export.
 hand-authored distributions. It never reads historical customer data, identifiers,
 notes, or model artifacts. The same row count and seed reproduce the same dataset.
 
-## Cleaning and validation
+## Cleaning and leakage safeguards
 
-`clean_lead_data()` performs structural cleaning only:
+`clean_lead_data()` performs structural cleaning only. Whole lead entities are then
+split by `ObjectID` before learned transformations are fitted.
 
-- normalizes identifiers and categorical values;
-- converts unknown categories to `unknown`;
-- coerces and clips numeric values to documented public ranges;
-- normalizes boolean-like values;
-- removes invalid targets and duplicate IDs.
+The model input excludes `status` and `loss_reason` because they are downstream
+outcomes. Median imputation, scaling, categorical imputation, and one-hot encoding
+are fitted on training data only and reused for evaluation data.
 
-It deliberately does not learn median or mode values. Learned imputation belongs
-inside the scikit-learn preprocessing graph and is fitted on the training split.
+## Reproducible EDA
 
-`validate_clean_data()` verifies unique IDs, binary targets, allowed categories,
-and numeric bounds.
+`build_eda_summary()` records:
 
-## Leakage safeguards
+- row count and overall conversion rate;
+- missing rates by column;
+- means for the main numeric engagement features;
+- conversion rate by source, industry, company size, and region.
 
-The preprocessing workflow enforces three boundaries:
+`save_eda_artifacts()` additionally writes diagnostic charts for target balance,
+source conversion rate, activity counts, and email-open-rate distributions.
 
-1. Split whole lead entities by `ObjectID` before fitting learned transformations.
-2. Exclude `status` and `loss_reason` from model inputs because they are downstream
-   outcomes.
-3. Fit median imputation, scaling, categorical imputation, and one-hot encoding on
-   training data only; reuse the fitted transformer for evaluation data.
+The generated associations are useful for testing the engineering workflow. They
+are not evidence about real customer behavior or real-world sales performance.
 
-The tests verify that train and test lead IDs are disjoint and that transformed
-outputs remain finite when synthetic predictors contain missing values.
+## Reproduce the workflow
 
-## Sample data
+After installing the project:
 
-`data/synthetic/leads_sample.csv` contains a small generated example for repository
-inspection.
+```bash
+python scripts/run_data_pipeline.py --rows 500 --seed 42
+```
 
-## Next step
+Outputs include:
 
-Exploratory summaries and plots are intentionally handled in a separate follow-up
-PR so data preparation and data analysis can be reviewed independently.
+- `data/synthetic/leads.csv` — generated public dataset;
+- `artifacts/processed/train.csv` and `test.csv` — lead-disjoint splits;
+- `artifacts/eda/summary.json` — compact EDA report;
+- `artifacts/eda/*.png` — diagnostic charts.
+
+`artifacts/` is ignored because these outputs can be regenerated.
 
 ## Limitations
 
