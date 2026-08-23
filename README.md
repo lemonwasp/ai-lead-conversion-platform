@@ -22,30 +22,39 @@ corporate data.
 
 ## Planned user flow
 
-1. Load or generate privacy-safe lead data.
-2. Validate and transform features through a reproducible pipeline.
-3. Compare baseline, Random Forest, and XGBoost classifiers.
-4. Request a conversion prediction through a FastAPI endpoint.
-5. Review model evidence in a React/TypeScript dashboard.
-6. Generate an editable outreach draft through an optional LLM adapter.
+1. Generate privacy-safe raw-like lead and lead-note data.
+2. Reconstruct the historical `ObjectID` -> `ParentObjectID` relationship.
+3. Reproduce the historical join/reduction workflow with leakage safeguards.
+4. Compare baseline, Random Forest, and XGBoost classifiers.
+5. Request a conversion prediction through a FastAPI endpoint.
+6. Review model evidence in a React/TypeScript dashboard.
+7. Generate an editable outreach draft through an optional LLM adapter.
 
 ## Reconstruction goals
 
-- Prevent entity leakage by splitting data at the lead (`ObjectID`) level.
+- Ground the public schema and aggregate distributions in evidence visible in
+  public 2024 hackathon notebooks without publishing source records.
+- Preserve the distinction between wide raw CRM data and the smaller modeling
+  dataset rather than designing directly around today's feature subset.
+- Prevent entity and target leakage by splitting at lead level and excluding
+  post-outcome information.
 - Separate preprocessing fitted on training data from evaluation data.
 - Report macro-F1, recall, precision, ROC-AUC, and a confusion matrix in addition
   to accuracy.
 - Treat generated messages as human-reviewed drafts, not autonomous decisions.
-- Keep the whole project reproducible with tests, Docker, and GitHub Actions.
+- Keep the project reproducible with tests, Docker, and GitHub Actions.
 
 ## Current status
 
-**Phase 0 — repository and safety foundation**
+**Phase 1 - calibrated synthetic data foundation**
 
 - [x] Public/private data boundary documented
 - [x] Minimal API health endpoint and test added
-- [ ] Synthetic CRM schema and generator
-- [ ] Leakage-safe feature pipeline
+- [x] Historical lead/note raw shape and join relationship reconstructed
+- [x] Public aggregate CRM profile documented
+- [x] Privacy-safe synthetic generator calibrated to observed aggregate behavior
+- [ ] Historical join/reduction and leakage-safe preprocessing
+- [ ] Reproducible EDA summary and diagnostic charts
 - [ ] Model baselines and experiment report
 - [ ] Prediction and explanation endpoints
 - [ ] React/TypeScript dashboard
@@ -70,6 +79,42 @@ Run the tests with:
 ```bash
 pytest
 ```
+
+## Synthetic CRM data
+
+The original public notebook workflow shows a wide `leads.csv` export
+(86,244 rows x 181 columns) and a one-to-many `lead_notes.csv` export
+(134,793 rows x 16 columns). The two were joined through
+`ObjectID = ParentObjectID`, then reduced to a smaller working dataset.
+
+The reconstruction keeps that separation. It also calibrates several synthetic
+properties from public aggregate notebook outputs, including:
+
+- the five observed workflow status proportions;
+- all 39 observed `Source_Text` frequencies;
+- the share of leads with note rows and average note count;
+- field-specific missingness for the historical working cohort;
+- observed cardinality/skew for owner, sales-unit, territory, and lead-name
+  fields;
+- mixed date formatting, language proportions, and dirty note placeholders.
+
+All public records are still newly generated. Historical identifiers, customer
+or employee names, and free-text notes are not copied, masked, translated, or
+sampled.
+
+The reconstruction is therefore **aggregate-calibrated synthetic data**, not an
+anonymized copy of the original corporate dataset. Properties whose full public
+distribution is unavailable remain explicit approximations rather than inferred
+historical facts.
+
+Small matching examples are committed at:
+
+- `data/synthetic/leads_sample.csv`
+- `data/synthetic/lead_notes_sample.csv`
+
+See [Synthetic CRM specification](docs/DATA_PIPELINE.md) and
+[Historical CRM aggregate profile](docs/HISTORICAL_DATA_PROFILE.md) for the
+source evidence, calibration boundary, and remaining approximations.
 
 ## Repository boundaries
 
