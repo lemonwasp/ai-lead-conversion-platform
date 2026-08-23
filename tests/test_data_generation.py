@@ -5,6 +5,7 @@ from lead_intelligence.data_generation import generate_synthetic_crm
 from lead_intelligence.data_schema import LEAD_COLUMNS, LEAD_NOTE_COLUMNS
 from lead_intelligence.historical_profile import (
     NOTE_PRESENCE_RATE,
+    SOURCE_COUNTS,
     STATUS_COUNTS,
     WORKING_MISSING_RATES,
 )
@@ -28,6 +29,7 @@ def test_generator_reconstructs_raw_relationship() -> None:
     assert notes["ObjectID"].is_unique
     assert set(notes["ParentObjectID"]).issubset(set(leads["ObjectID"]))
     assert set(leads["Status_Text"].unique()).issubset(STATUS_COUNTS)
+    assert set(leads["Source_Text"].unique()).issubset(SOURCE_COUNTS)
 
 
 def test_some_leads_have_no_notes_like_historical_inner_join() -> None:
