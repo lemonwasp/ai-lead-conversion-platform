@@ -5,6 +5,7 @@ from lead_intelligence.data_generation import generate_synthetic_crm
 from lead_intelligence.data_schema import LEAD_COLUMNS, LEAD_NOTE_COLUMNS
 from lead_intelligence.historical_profile import (
     NOTE_PRESENCE_RATE,
+    RAW_DOT_NOTE_RATE,
     SOURCE_COUNTS,
     STATUS_COUNTS,
     WORKING_MISSING_RATES,
@@ -50,6 +51,9 @@ def test_default_profile_tracks_public_aggregate_rates() -> None:
     observed_status = leads["Status_Text"].value_counts(normalize=True)
     for label, expected in expected_status.items():
         assert abs(observed_status[label] - expected) < 0.015
+
+    observed_dot_rate = leads["Note"].fillna("").eq(".").mean()
+    assert abs(observed_dot_rate - RAW_DOT_NOTE_RATE) < 0.004
 
     assert (
         abs(

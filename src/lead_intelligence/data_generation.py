@@ -265,7 +265,12 @@ def generate_synthetic_crm(
         for column in ("Name", "Contact_Information_Job_Title", "Sales_Unit_Name", "Sales_Territory_Name", "Note"):
             _apply_missing(leads, column, missing_rate, rng)
 
-    dot_mask = leads["Note"].notna().to_numpy() & (rng.random(n_leads) < RAW_DOT_NOTE_RATE)
+    non_null_notes = leads["Note"].notna().to_numpy()
+    dot_probability = min(
+        RAW_DOT_NOTE_RATE / max(float(non_null_notes.mean()), np.finfo(float).eps),
+        1.0,
+    )
+    dot_mask = non_null_notes & (rng.random(n_leads) < dot_probability)
     leads.loc[dot_mask, "Note"] = "."
 
     note_rows: list[dict[str, object]] = []
