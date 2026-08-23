@@ -1,21 +1,21 @@
-ObjectID,source,industry,company_size,region,status,loss_reason,days_since_last_activity,activity_count_30d,email_open_rate,website_visits_30d,has_phone,note_length,converted
-LEAD-000001,outbound,healthcare,small,rest_of_europe,contacted,not_applicable,47.0,4,0.141,8,True,153,0
-LEAD-000002,event,manufacturing,enterprise,rest_of_europe,new,not_applicable,42.0,3,0.1375,0,True,201,0
-LEAD-000003,outbound,other,mid_market,rest_of_europe,qualified,not_applicable,22.0,6,0.485,8,True,126,1
-LEAD-000004,outbound,other,unknown,americas,won,not_applicable,10.0,8,0.376,9,True,83,1
-LEAD-000005,web,healthcare,enterprise,rest_of_europe,new,not_applicable,20.0,4,0.4651,7,True,134,0
-LEAD-000006,partner,software,mid_market,rest_of_europe,qualified,not_applicable,43.0,6,0.3134,7,True,81,1
-LEAD-000007,outbound,retail,small,rest_of_europe,contacted,not_applicable,48.0,6,0.551,9,False,183,0
-LEAD-000008,outbound,software,small,dach,qualified,not_applicable,21.0,8,0.202,5,True,30,0
-LEAD-000009,web,software,mid_market,dach,won,not_applicable,5.0,6,0.4747,1,True,80,1
-LEAD-000010,event,finance,small,dach,qualified,not_applicable,9.0,7,0.6588,0,True,27,0
-LEAD-000011,event,healthcare,small,dach,qualified,not_applicable,40.0,6,0.4327,4,True,38,1
-LEAD-000012,partner,other,small,dach,contacted,not_applicable,22.0,7,0.1808,4,True,241,0
-LEAD-000013,referral,manufacturing,mid_market,americas,won,not_applicable,22.0,1,0.2784,8,False,178,1
-LEAD-000014,outbound,manufacturing,mid_market,dach,won,not_applicable,13.0,4,0.0428,2,False,62,1
-LEAD-000015,event,retail,mid_market,dach,qualified,not_applicable,13.0,7,0.497,4,False,37,0
-LEAD-000016,web,software,mid_market,dach,lost,unresponsive,54.0,8,,5,True,14,0
-LEAD-000017,referral,software,small,dach,new,not_applicable,41.0,4,0.337,1,True,70,0
-LEAD-000018,web,retail,mid_market,rest_of_europe,contacted,not_applicable,18.0,7,0.4744,4,False,480,0
-LEAD-000019,outbound,unknown,small,rest_of_europe,won,not_applicable,32.0,9,,1,True,132,1
-LEAD-000020,referral,finance,small,americas,contacted,not_applicable,36.0,7,0.2796,1,False,69,0
+ObjectID,Name,Source_Text,Status_Text,Start_Date,End_Date,Owner_Party_Name,Sales_Unit_Name,Sales_Territory_Name,Note
+SYNTH-LEAD-000001,Synthetic Lead 000001,Synthetic Event,Closed,2022-10-26,2023-02-03,Synthetic Owner 06,Synthetic Sales Unit 4,Synthetic Territory 6,Inquiry details were reviewed with the customer.
+SYNTH-LEAD-000002,Synthetic Lead 000002,Synthetic Web Request,Unqualified,2021-04-23,2021-05-17,Synthetic Owner 09,Synthetic Sales Unit 1,Synthetic Territory 4,Customer requested product information.
+SYNTH-LEAD-000003,Synthetic Lead 000003,Synthetic Manual Entry,Closed,2020-06-24,2020-09-29,Synthetic Owner 08,Synthetic Sales Unit 2,Synthetic Territory 3,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000004,Synthetic Lead 000004,Synthetic Manual Entry,Closed,2022-06-30,2022-07-01,Synthetic Owner 06,Synthetic Sales Unit 2,Synthetic Territory 3,Next sales action was recorded for follow-up.
+SYNTH-LEAD-000005,Synthetic Lead 000005,Synthetic Event,Converted,2021-11-20,2022-02-24,Synthetic Owner 11,Synthetic Sales Unit 4,Synthetic Territory 3,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000006,Synthetic Lead 000006,Synthetic Web Request,Closed,2022-02-05,2022-05-11,Synthetic Owner 07,Synthetic Sales Unit 4,Synthetic Territory 5,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000007,Synthetic Lead 000007,Synthetic Campaign,Closed,2020-04-16,2020-07-19,Synthetic Owner 01,Synthetic Sales Unit 1,Synthetic Territory 2,Customer requested product information.
+SYNTH-LEAD-000008,Synthetic Lead 000008,Synthetic Web Request,Closed,2020-12-08,2021-02-26,Synthetic Owner 10,Synthetic Sales Unit 1,Synthetic Territory 2,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000009,Synthetic Lead 000009,Synthetic Web Request,Converted,2022-04-20,2022-06-16,Synthetic Owner 07,Synthetic Sales Unit 4,Synthetic Territory 3,Follow-up completed and technical requirements were discussed.
+SYNTH-LEAD-000010,Synthetic Lead 000010,Synthetic Campaign,Unqualified,2022-06-30,2022-09-23,Synthetic Owner 08,Synthetic Sales Unit 1,,Follow-up completed and technical requirements were discussed.
+SYNTH-LEAD-000011,Synthetic Lead 000011,Synthetic Event,Unqualified,2021-04-21,2021-05-25,Synthetic Owner 07,Synthetic Sales Unit 4,Synthetic Territory 1,Next sales action was recorded for follow-up.
+SYNTH-LEAD-000012,Synthetic Lead 000012,Synthetic Manual Entry,Closed,2022-05-31,2022-09-02,Synthetic Owner 07,Synthetic Sales Unit 2,Synthetic Territory 1,Customer asked for clarification about product suitability.
+SYNTH-LEAD-000013,Synthetic Lead 000013,Synthetic Web Request,Closed,2022-07-10,2022-09-15,Synthetic Owner 02,Synthetic Sales Unit 4,Synthetic Territory 5,Customer asked for clarification about product suitability.
+SYNTH-LEAD-000014,Synthetic Lead 000014,Synthetic Web Request,Closed,2021-02-28,2021-04-25,Synthetic Owner 07,Synthetic Sales Unit 2,Synthetic Territory 5,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000015,Synthetic Lead 000015,Synthetic Campaign,Unqualified,2022-09-10,2022-11-10,Synthetic Owner 10,Synthetic Sales Unit 2,Synthetic Territory 5,Inquiry details were reviewed with the customer.
+SYNTH-LEAD-000016,Synthetic Lead 000016,Synthetic Web Request,Converted,2020-11-11,2021-01-19,,Synthetic Sales Unit 3,Synthetic Territory 3,Customer requested product information.
+SYNTH-LEAD-000017,Synthetic Lead 000017,Synthetic Web Request,Unqualified,2020-09-19,2020-09-24,Synthetic Owner 08,Synthetic Sales Unit 1,Synthetic Territory 5,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000018,Synthetic Lead 000018,Synthetic Campaign,Converted,2022-01-17,2022-02-03,Synthetic Owner 01,Synthetic Sales Unit 3,Synthetic Territory 1,Customer requested product information.
+SYNTH-LEAD-000019,Synthetic Lead 000019,Synthetic Web Request,Closed,2021-11-28,2021-12-28,Synthetic Owner 05,Synthetic Sales Unit 3,Synthetic Territory 6,Sales contact recorded a request for additional documentation.
+SYNTH-LEAD-000020,Synthetic Lead 000020,Synthetic Campaign,Closed,2020-06-02,2020-06-16,Synthetic Owner 06,Synthetic Sales Unit 4,Synthetic Territory 4,Inquiry details were reviewed with the customer.
