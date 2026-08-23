@@ -22,15 +22,18 @@ corporate data.
 
 ## Planned user flow
 
-1. Load or generate privacy-safe lead data.
-2. Validate and transform features through a reproducible pipeline.
-3. Compare baseline, Random Forest, and XGBoost classifiers.
-4. Request a conversion prediction through a FastAPI endpoint.
-5. Review model evidence in a React/TypeScript dashboard.
-6. Generate an editable outreach draft through an optional LLM adapter.
+1. Load or generate privacy-safe lead and lead-note data.
+2. Reconstruct the historical `ObjectID` → `ParentObjectID` relationship.
+3. Validate and transform features through a reproducible pipeline.
+4. Compare baseline, Random Forest, and XGBoost classifiers.
+5. Request a conversion prediction through a FastAPI endpoint.
+6. Review model evidence in a React/TypeScript dashboard.
+7. Generate an editable outreach draft through an optional LLM adapter.
 
 ## Reconstruction goals
 
+- Ground the public schema in the table relationship and fields used by the 2024
+  hackathon workflow without publishing source records.
 - Prevent entity leakage by splitting data at the lead (`ObjectID`) level.
 - Separate preprocessing fitted on training data from evaluation data.
 - Report macro-F1, recall, precision, ROC-AUC, and a confusion matrix in addition
@@ -40,11 +43,12 @@ corporate data.
 
 ## Current status
 
-**Phase 1 — synthetic data foundation**
+**Phase 1 — historical-shape synthetic data foundation**
 
 - [x] Public/private data boundary documented
 - [x] Minimal API health endpoint and test added
-- [x] Synthetic CRM schema and deterministic generator
+- [x] Historical lead/note table relationship documented
+- [x] Privacy-safe synthetic `leads` and `lead_notes` generators
 - [ ] Leakage-safe cleaning, lead-level split, and feature preprocessing
 - [ ] Reproducible EDA summary and diagnostic charts
 - [ ] Model baselines and experiment report
@@ -74,16 +78,27 @@ pytest
 
 ## Synthetic CRM data
 
-The public dataset is generated entirely from fixed, hand-authored statistical
-rules and a reproducible random seed. It does not read, mask, perturb, or sample
-records from the historical corporate dataset.
+The public generator reconstructs the **shape** of the historical workflow: a
+lead-level table and a one-to-many note table joined through
+`ObjectID = ParentObjectID`.
 
-A small generated example is committed at `data/synthetic/leads_sample.csv`.
-The generator and schema live in `src/lead_intelligence/data_generation.py` and
-`src/lead_intelligence/data_schema.py`.
+The field names used by that workflow are preserved where they are known from
+public 2024 notebooks, including `Source_Text`, `Status_Text`, `Start_Date`,
+`End_Date`, `Note`, `Text`, and `Created_On`.
 
-See [Synthetic data specification](docs/DATA_PIPELINE.md) for the schema,
-generation rules, privacy boundary, and current limitations.
+All public values are newly generated. The code does not read, mask, perturb,
+translate, sample, or statistically fit source customer records. Category
+probabilities, dates, and note templates remain hand-authored engineering
+fixtures, so this milestone claims **structural fidelity, not statistical
+fidelity**.
+
+Small matching examples are committed at:
+
+- `data/synthetic/leads_sample.csv`
+- `data/synthetic/lead_notes_sample.csv`
+
+See [Synthetic CRM specification](docs/DATA_PIPELINE.md) for the historical
+grounding, reconstruction boundary, generation rules, and current limitations.
 
 ## Repository boundaries
 
