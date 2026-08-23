@@ -1,13 +1,162 @@
-"""Deterministic generator for privacy-safe synthetic CRM lead data."""
+"""Deterministic privacy-safe reconstruction of the historical CRM table shape."""
 
 from __future__ import annotations
+
+from dataclasses import dataclass
 
 import numpy as np
 import pandas as pd
 
+from lead_intelligence.data_schema import OBSERVED_STATUS_VALUES
 
-def _sigmoid(values: np.ndarray) -> np.ndarray:
-    return 1.0 / (1.0 + np.exp(-values))
+
+@dataclass(frozen=True)
+class SyntheticCRMData:
+    """Synthetic counterparts of the historical lead and lead-note tables."""
+
+    leads: pd.DataFrame
+    lead_notes: pd.DataFrame
+
+
+def _pick_note_template(rng: np.random.Generator) -> str:
+    """Return generic synthetic sales text that is not copied from source data."""
+
+    templates = (
+        "Customer requested product information.",
+        "Follow-up completed and technical requirements were discussed.",
+        "Sales contact recorded a request for additional documentation.",
+        "Customer asked for clarification about product suitability.",
+        "Next sales action was recorded for follow-up.",
+        "Inquiry details were reviewed with the customer.",
+    )
+    return str(rng.choice(templates))
+
+
+def generate_synthetic_crm(
+    n_leads: int = 500,
+    seed: int = 42,
+    *,
+    missing_rate: float = 0.03,
+    max_notes_per_lead: int = 4,
+) -> SyntheticCRMData:
+    """Generate two synthetic tables shaped like the public 2024 workflow.
+
+    The historical notebook loaded ``leads.csv`` and ``lead_notes.csv`` and
+    joined ``ObjectID`` to ``ParentObjectID``.  This generator recreates that
+    relationship with new identifiers and generic text.  It does not read,
+    sample, perturb, translate, or statistically fit the historical records.
+
+    Category probabilities and date ranges below are hand-authored engineering
+    fixtures.  They make the pipeline reproducible; they are not estimates of
+    the historical customer population.
+    """
+
+    if n_leads < 20:
+        raise ValueError("n_leads must be at least 20")
+    if not 0.0 <= missing_rate < 0.25:
+        raise ValueError("missing_rate must be in [0.0, 0.25)")
+    if not 1 <= max_notes_per_lead <= 20:
+        raise ValueError("max_notes_per_lead must be between 1 and 20")
+
+    rng = np.random.default_rng(seed)
+    object_ids = [f"SYNTH-LEAD-{index:06d}" for index in range(1, n_leads + 1)]
+
+    # These labels mirror statuses observed in public notebook output.  Their
+    # probabilities are synthetic and intentionally not presented as historical
+    # frequencies.
+    status = rng.choice(
+        OBSERVED_STATUS_VALUES,
+        size=n_leads,
+        p=[0.28, 0.30, 0.42],
+    )
+    source = rng.choice(
+        [
+            "Synthetic Web Request",
+            "Synthetic Campaign",
+            "Synthetic Event",
+            "Synthetic Manual Entry",
+        ],
+        size=n_leads,
+        p=[0.45, 0.25, 0.15, 0.15],
+    )
+
+    start_offsets = rng.integers(0, 365 * 3, size=n_leads)
+    start_dates = pd.Timestamp("2020-01-01") + pd.to_timedelta(
+        start_offsets,
+        unit="D",
+    )
+    close_delays = rng.integers(1, 121, size=n_leads)
+    end_dates = start_dates + pd.to_timedelta(close_delays, unit="D")
+
+    leads = pd.DataFrame(
+        {
+            "ObjectID": object_ids,
+            "Name": [
+                f"Synthetic Lead {index:06d}" for index in range(1, n_leads + 1)
+            ],
+            "Source_Text": source,
+            "Status_Text": status,
+            "Start_Date": start_dates.strftime("%Y-%m-%d"),
+            "End_Date": end_dates.strftime("%Y-%m-%d"),
+            "Owner_Party_Name": [
+                f"Synthetic Owner {index:02d}"
+                for index in rng.integers(1, 13, size=n_leads)
+            ],
+            "Sales_Unit_Name": [
+                f"Synthetic Sales Unit {index}"
+                for index in rng.integers(1, 5, size=n_leads)
+            ],
+            "Sales_Territory_Name": [
+                f"Synthetic Territory {index}"
+                for index in rng.integers(1, 7, size=n_leads)
+            ],
+            "Note": [_pick_note_template(rng) for _ in range(n_leads)],
+        }
+    )
+
+    for column in (
+        "Source_Text",
+        "Owner_Party_Name",
+        "Sales_Territory_Name",
+        "Note",
+    ):
+        mask = rng.random(n_leads) < missing_rate
+        leads.loc[mask, column] = pd.NA
+
+    note_rows: list[dict[str, object]] = []
+    for object_id, start_date, end_date in zip(
+        object_ids,
+        start_dates,
+        end_dates,
+        strict=True,
+    ):
+        note_count = int(
+            np.clip(rng.poisson(1.3) + 1, 1, max_notes_per_lead)
+        )
+        duration_days = max(int((end_date - start_date).days), 1)
+        note_offsets = np.sort(
+            rng.integers(0, duration_days + 1, size=note_count)
+        )
+
+        for sequence, offset in enumerate(note_offsets, start=1):
+            note_rows.append(
+                {
+                    "ParentObjectID": object_id,
+                    "Text": (
+                        f"{_pick_note_template(rng)} "
+                        f"Synthetic note {sequence}."
+                    ),
+                    "Created_On": (
+                        start_date + pd.Timedelta(days=int(offset))
+                    ).strftime("%Y-%m-%d"),
+                }
+            )
+
+    lead_notes = pd.DataFrame(note_rows)
+    note_missing_mask = rng.random(len(lead_notes)) < missing_rate
+    lead_notes.loc[note_missing_mask, "Text"] = pd.NA
+
+    return SyntheticCRMData(leads=leads, lead_notes=lead_notes)
 
 
 def generate_synthetic_leads(
@@ -16,114 +165,25 @@ def generate_synthetic_leads(
     *,
     missing_rate: float = 0.03,
 ) -> pd.DataFrame:
-    """Generate synthetic leads from a documented statistical specification.
+    """Return the synthetic lead table for callers that need only leads."""
 
-    The generator is independent of the historical corporate dataset. It uses
-    only fixed categorical distributions and a hand-authored latent conversion
-    function so that the resulting sample is reproducible and non-identifying.
-    """
+    return generate_synthetic_crm(
+        n_leads=n_rows,
+        seed=seed,
+        missing_rate=missing_rate,
+    ).leads
 
-    if n_rows < 20:
-        raise ValueError("n_rows must be at least 20")
-    if not 0.0 <= missing_rate < 0.25:
-        raise ValueError("missing_rate must be in [0.0, 0.25)")
 
-    rng = np.random.default_rng(seed)
+def generate_synthetic_lead_notes(
+    n_leads: int = 500,
+    seed: int = 42,
+    *,
+    missing_rate: float = 0.03,
+) -> pd.DataFrame:
+    """Return the matching one-to-many synthetic lead-note table."""
 
-    source = rng.choice(
-        ["web", "event", "referral", "outbound", "partner"],
-        size=n_rows,
-        p=[0.34, 0.15, 0.18, 0.23, 0.10],
-    )
-    industry = rng.choice(
-        ["software", "manufacturing", "retail", "finance", "healthcare", "other"],
-        size=n_rows,
-        p=[0.24, 0.18, 0.16, 0.14, 0.12, 0.16],
-    )
-    company_size = rng.choice(
-        ["small", "mid_market", "enterprise"],
-        size=n_rows,
-        p=[0.48, 0.35, 0.17],
-    )
-    region = rng.choice(
-        ["dach", "rest_of_europe", "americas", "apac"],
-        size=n_rows,
-        p=[0.44, 0.30, 0.16, 0.10],
-    )
-
-    days_since_last_activity = np.clip(
-        rng.gamma(shape=2.0, scale=18.0, size=n_rows), 0, 365
-    ).round().astype(int)
-    activity_count_30d = np.clip(rng.poisson(lam=6.0, size=n_rows), 0, 100)
-    email_open_rate = np.clip(rng.beta(a=2.2, b=3.8, size=n_rows), 0, 1)
-    website_visits_30d = np.clip(rng.negative_binomial(2, 0.35, size=n_rows), 0, 200)
-    has_phone = rng.choice([True, False], size=n_rows, p=[0.72, 0.28])
-    note_length = np.clip(rng.lognormal(mean=4.6, sigma=0.65, size=n_rows), 0, 5000)
-    note_length = note_length.round().astype(int)
-
-    score = (
-        -2.55
-        + np.isin(source, ["referral", "partner"]) * 0.85
-        + np.isin(industry, ["software", "finance"]) * 0.40
-        + np.isin(company_size, ["mid_market", "enterprise"]) * 0.45
-        + (region == "dach") * 0.15
-        - days_since_last_activity * 0.018
-        + activity_count_30d * 0.10
-        + email_open_rate * 1.65
-        + website_visits_30d * 0.055
-        + has_phone * 0.30
-        + np.log1p(note_length) * 0.08
-    )
-    conversion_probability = np.clip(_sigmoid(score), 0.02, 0.95)
-    converted = rng.binomial(1, conversion_probability)
-
-    status = np.empty(n_rows, dtype=object)
-    loss_reason = np.empty(n_rows, dtype=object)
-    for index, is_converted in enumerate(converted):
-        if is_converted:
-            status[index] = rng.choice(["qualified", "won"], p=[0.35, 0.65])
-            loss_reason[index] = "not_applicable"
-        else:
-            status[index] = rng.choice(
-                ["new", "contacted", "qualified", "lost"],
-                p=[0.20, 0.28, 0.17, 0.35],
-            )
-            loss_reason[index] = (
-                rng.choice(
-                    ["budget", "timing", "no_fit", "competitor", "unresponsive"],
-                    p=[0.22, 0.22, 0.18, 0.14, 0.24],
-                )
-                if status[index] == "lost"
-                else "not_applicable"
-            )
-
-    frame = pd.DataFrame(
-        {
-            "ObjectID": [f"LEAD-{i:06d}" for i in range(1, n_rows + 1)],
-            "source": source,
-            "industry": industry,
-            "company_size": company_size,
-            "region": region,
-            "status": status,
-            "loss_reason": loss_reason,
-            "days_since_last_activity": days_since_last_activity,
-            "activity_count_30d": activity_count_30d,
-            "email_open_rate": email_open_rate.round(4),
-            "website_visits_30d": website_visits_30d,
-            "has_phone": has_phone,
-            "note_length": note_length,
-            "converted": converted.astype(int),
-        }
-    )
-
-    nullable_columns = [
-        "industry",
-        "company_size",
-        "days_since_last_activity",
-        "email_open_rate",
-    ]
-    for column in nullable_columns:
-        mask = rng.random(n_rows) < missing_rate
-        frame.loc[mask, column] = np.nan
-
-    return frame
+    return generate_synthetic_crm(
+        n_leads=n_leads,
+        seed=seed,
+        missing_rate=missing_rate,
+    ).lead_notes
