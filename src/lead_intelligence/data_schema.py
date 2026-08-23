@@ -1,90 +1,64 @@
-"""Tabular schema for the privacy-safe synthetic CRM dataset."""
+"""Public reconstruction schema based on the historical hackathon workflow.
+
+The 2024 notebooks loaded a wide ``leads.csv`` table and a one-to-many
+``lead_notes.csv`` table, then joined ``ObjectID`` to ``ParentObjectID``.  This
+module captures only the fields used by that public preprocessing workflow.  It
+does not reproduce private records or claim to reproduce the full source schema.
+"""
 
 from __future__ import annotations
 
 from typing import Final
 
 ID_COLUMN: Final = "ObjectID"
-TARGET_COLUMN: Final = "converted"
+NOTE_PARENT_COLUMN: Final = "ParentObjectID"
+STATUS_COLUMN: Final = "Status_Text"
+CONVERTED_STATUS: Final = "Converted"
 
-CATEGORICAL_VALUES: Final[dict[str, tuple[str, ...]]] = {
-    "source": ("web", "event", "referral", "outbound", "partner", "unknown"),
-    "industry": (
-        "software",
-        "manufacturing",
-        "retail",
-        "finance",
-        "healthcare",
-        "other",
-        "unknown",
-    ),
-    "company_size": ("small", "mid_market", "enterprise", "unknown"),
-    "region": ("dach", "rest_of_europe", "americas", "apac", "unknown"),
-    "status": ("new", "contacted", "qualified", "won", "lost", "unknown"),
-    "loss_reason": (
-        "budget",
-        "timing",
-        "no_fit",
-        "competitor",
-        "unresponsive",
-        "not_applicable",
-        "unknown",
-    ),
-}
+# Status labels observed in the public 2024 notebook output.  This is a minimal
+# reconstruction set, not a claim that the historical system had only these
+# statuses.
+OBSERVED_STATUS_VALUES: Final[tuple[str, ...]] = (
+    "Converted",
+    "Unqualified",
+    "Closed",
+)
 
-NUMERIC_RANGES: Final[dict[str, tuple[float, float]]] = {
-    "days_since_last_activity": (0.0, 365.0),
-    "activity_count_30d": (0.0, 100.0),
-    "email_open_rate": (0.0, 1.0),
-    "website_visits_30d": (0.0, 200.0),
-    "note_length": (0.0, 5000.0),
-}
-
-BOOLEAN_COLUMNS: Final[tuple[str, ...]] = ("has_phone",)
-
-REQUIRED_COLUMNS: Final[tuple[str, ...]] = (
+# Fields selected by the public make_leads.ipynb preprocessing example after
+# joining the lead and note tables.  Note-table fields remain separate below so
+# the raw one-to-many relationship can be reconstructed faithfully.
+LEAD_COLUMNS: Final[tuple[str, ...]] = (
     ID_COLUMN,
-    "source",
-    "industry",
-    "company_size",
-    "region",
-    "status",
-    "loss_reason",
-    "days_since_last_activity",
-    "activity_count_30d",
-    "email_open_rate",
-    "website_visits_30d",
-    "has_phone",
-    "note_length",
-    TARGET_COLUMN,
+    "Name",
+    "Source_Text",
+    STATUS_COLUMN,
+    "Start_Date",
+    "End_Date",
+    "Owner_Party_Name",
+    "Sales_Unit_Name",
+    "Sales_Territory_Name",
+    "Note",
 )
 
-# Deliberately excludes status and loss_reason because both are downstream
-# outcomes that would leak the conversion label into a predictive model.
-MODEL_FEATURE_COLUMNS: Final[tuple[str, ...]] = (
-    "source",
-    "industry",
-    "company_size",
-    "region",
-    "days_since_last_activity",
-    "activity_count_30d",
-    "email_open_rate",
-    "website_visits_30d",
-    "has_phone",
-    "note_length",
+LEAD_NOTE_COLUMNS: Final[tuple[str, ...]] = (
+    NOTE_PARENT_COLUMN,
+    "Text",
+    "Created_On",
 )
 
-NUMERIC_FEATURE_COLUMNS: Final[tuple[str, ...]] = (
-    "days_since_last_activity",
-    "activity_count_30d",
-    "email_open_rate",
-    "website_visits_30d",
-    "note_length",
-)
-
-CATEGORICAL_FEATURE_COLUMNS: Final[tuple[str, ...]] = (
-    "source",
-    "industry",
-    "company_size",
-    "region",
+# The historical notebook used these fields after the ObjectID/ParentObjectID
+# join.  They are documented here for later preprocessing work.
+JOINED_WORKFLOW_COLUMNS: Final[tuple[str, ...]] = (
+    "Name",
+    "Source_Text",
+    STATUS_COLUMN,
+    "Start_Date",
+    "End_Date",
+    "Owner_Party_Name",
+    "Sales_Unit_Name",
+    "Sales_Territory_Name",
+    ID_COLUMN,
+    "Created_On",
+    "Note",
+    "Text",
 )
