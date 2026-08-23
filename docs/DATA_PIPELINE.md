@@ -1,107 +1,77 @@
-# Synthetic Data and Preprocessing Pipeline
+# Synthetic CRM Data Specification
 
-This document defines the public dataset used by the 2026 reconstruction. The
-dataset is generated from code in this repository and is not derived from the
+This document defines the public synthetic dataset used by the 2026 reconstruction.
+The dataset is generated from code in this repository and is not derived from the
 historical corporate CRM export.
 
 ## Dataset schema
 
 | Column | Type | Purpose |
 | --- | --- | --- |
-| `ObjectID` | string | Synthetic lead identifier and entity-split key |
+| `ObjectID` | string | Synthetic lead identifier |
 | `source` | category | Lead acquisition channel |
 | `industry` | category | Synthetic company industry |
 | `company_size` | category | Small, mid-market, or enterprise segment |
 | `region` | category | Broad synthetic sales region |
-| `status` | category | Workflow outcome used for EDA only |
-| `loss_reason` | category | Synthetic loss reason used for EDA only |
+| `status` | category | Synthetic workflow outcome |
+| `loss_reason` | category | Synthetic loss reason |
 | `days_since_last_activity` | numeric | Recency of engagement |
 | `activity_count_30d` | numeric | Number of recent activities |
 | `email_open_rate` | numeric | Synthetic email engagement rate |
 | `website_visits_30d` | numeric | Recent website visits |
 | `has_phone` | boolean | Whether a synthetic contact route exists |
 | `note_length` | numeric | Length proxy, not real note content |
-| `converted` | binary | Modeling target |
+| `converted` | binary | Future modeling target |
 
-`status` and `loss_reason` are intentionally excluded from the model feature
-set. They are downstream outcomes and would create target leakage.
+## Generation specification
 
-## Synthetic generation specification
-
-`generate_synthetic_leads()` uses NumPy's seeded random number generator. It
-samples every field from fixed, hand-authored distributions:
+`generate_synthetic_leads()` uses NumPy's seeded random number generator. Every
+field is created from fixed, hand-authored rules:
 
 - acquisition, industry, company-size, and region categories use fixed
   probabilities;
-- activity and engagement metrics use gamma, Poisson, beta, negative-binomial,
-  and log-normal distributions;
+- activity and engagement metrics use synthetic probability distributions;
 - conversion probability is produced by a hand-authored latent logistic score;
-- outcome status and loss reason are generated after the conversion target;
+- outcome status and loss reason are generated only after the conversion target;
 - a small configurable missingness rate is injected into predictor columns.
 
-The generator never reads historical files, customer identifiers, notes, or
-model artifacts. The same row count and seed reproduce the same dataset.
+The generator never reads historical files, customer identifiers, notes, or model
+artifacts. The same row count and seed reproduce the same dataset.
 
-## Cleaning and validation
+## Privacy boundary
 
-`clean_lead_data()` performs only structural cleaning:
+Public synthetic records must satisfy the repository's data policy:
 
-- trims and normalizes identifiers and categorical values;
-- converts invalid categories to `unknown`;
-- coerces numeric values and clips them to documented public ranges;
-- normalizes boolean-like values;
-- removes rows with missing identifiers or invalid targets;
-- removes duplicate lead IDs.
+- no real customer, account, contact, or company identifiers;
+- no copied, perturbed, translated, or masked historical records;
+- no real free-text notes;
+- no model artifact trained on the historical corporate dataset.
 
-It deliberately does **not** learn median or mode values. Learned imputation
-belongs inside the scikit-learn preprocessing graph and is fitted on training
-data only.
+`ObjectID` values are newly generated synthetic identifiers. `note_length` is only
+a numeric proxy and does not contain note text.
 
-`validate_clean_data()` then verifies unique IDs, binary targets, allowed
-categories, and numeric bounds.
+## Validation in this milestone
 
-## Leakage safeguards
+The synthetic-data tests verify that:
 
-The preprocessing workflow enforces three boundaries:
+- the expected schema is produced;
+- generated IDs are unique;
+- the conversion target is binary;
+- repeated calls with the same seed reproduce the same records;
+- different seeds produce different records.
 
-1. Split entities by `ObjectID` before fitting any learned transformation.
-2. Exclude `status` and `loss_reason` from model features.
-3. Fit median imputation, scaling, and categorical imputation/encoding on the
-   training split only; reuse that fitted transformer for evaluation data.
+Cleaning, train/test splitting, learned preprocessing, and EDA are intentionally
+left for follow-up pull requests so each engineering concern can be reviewed
+independently.
 
-These rules are intended to make later model comparisons reproducible and to
-avoid optimistic metrics caused by data leakage.
+## Sample data
 
-## Reproduce the pipeline
+`data/synthetic/leads_sample.csv` contains a small generated example for repository
+inspection. It is synthetic and can be regenerated from the same documented
+specification.
 
-After installing the project:
+## Limitations
 
-```bash
-python scripts/run_data_pipeline.py --rows 500 --seed 42
-```
-
-Outputs:
-
-- `data/synthetic/leads.csv` — public synthetic dataset;
-- `artifacts/processed/train.csv` — generated training split;
-- `artifacts/processed/test.csv` — generated evaluation split;
-- `artifacts/eda/summary.json` — compact EDA report;
-- `artifacts/eda/*.png` — target balance and feature diagnostics.
-
-`artifacts/` is ignored because every artifact can be regenerated.
-
-## EDA scope
-
-The current EDA records:
-
-- overall conversion rate;
-- missing rate by column;
-- means for the main numeric engagement features;
-- conversion rate by acquisition source, industry, company size, and region;
-- target balance;
-- activity-count distribution;
-- email-open-rate distribution.
-
-The synthetic associations are useful for engineering and testing the pipeline.
-They are **not evidence about real customer behavior or real-world conversion
-performance**.
+The generated relationships exist to exercise the engineering pipeline. They are
+not evidence about real customer behavior, real sales performance, or the original
+hackathon dataset.
