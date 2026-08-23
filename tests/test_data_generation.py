@@ -45,6 +45,7 @@ def test_some_leads_have_no_notes_like_historical_inner_join() -> None:
 def test_default_profile_tracks_public_aggregate_rates() -> None:
     generated = generate_synthetic_crm(20_000, seed=31)
     leads = generated.leads
+    notes = generated.lead_notes
 
     expected_status = pd.Series(STATUS_COUNTS, dtype=float)
     expected_status /= expected_status.sum()
@@ -65,6 +66,10 @@ def test_default_profile_tracks_public_aggregate_rates() -> None:
             - WORKING_MISSING_RATES["Sales_Territory_Name"]
         )
         < 0.02
+    )
+    assert (
+        abs(notes["Text"].isna().mean() - WORKING_MISSING_RATES["Text"])
+        < 0.0015
     )
 
 

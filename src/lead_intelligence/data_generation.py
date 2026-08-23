@@ -283,11 +283,11 @@ def generate_synthetic_crm(
         duration = max(int((end_date - start_date).days), 1)
         offsets = np.sort(rng.integers(0, duration + 1, size=count))
 
-        for position, offset in enumerate(offsets):
+        for offset in offsets:
             created = start_date + pd.Timedelta(days=int(offset), seconds=int(rng.integers(0, 86_400)))
             updated = created + pd.Timedelta(days=int(rng.integers(0, 30)))
             text: object = _generic_note(str(language) if language is not None else "EN", rng)
-            if missing_rate is None and position == 0 and rng.random() < WORKING_MISSING_RATES["Text"]:
+            if missing_rate is None and rng.random() < WORKING_MISSING_RATES["Text"]:
                 text = pd.NA
             elif missing_rate is not None and rng.random() < missing_rate:
                 text = pd.NA
