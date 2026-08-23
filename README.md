@@ -40,13 +40,13 @@ corporate data.
 
 ## Current status
 
-**Phase 1 — synthetic data and preprocessing**
+**Phase 1 — synthetic data foundation**
 
 - [x] Public/private data boundary documented
 - [x] Minimal API health endpoint and test added
 - [x] Synthetic CRM schema and deterministic generator
-- [x] Leakage-safe cleaning, lead-level split, and feature preprocessing
-- [x] Reproducible EDA summary and diagnostic charts
+- [ ] Leakage-safe cleaning, lead-level split, and feature preprocessing
+- [ ] Reproducible EDA summary and diagnostic charts
 - [ ] Model baselines and experiment report
 - [ ] Prediction and explanation endpoints
 - [ ] React/TypeScript dashboard
@@ -72,24 +72,18 @@ Run the tests with:
 pytest
 ```
 
-## Rebuild the synthetic data pipeline
+## Synthetic CRM data
 
-Generate a deterministic public dataset, create train/test splits, and produce
-EDA artifacts:
+The public dataset is generated entirely from fixed, hand-authored statistical
+rules and a reproducible random seed. It does not read, mask, perturb, or sample
+records from the historical corporate dataset.
 
-```bash
-python scripts/run_data_pipeline.py --rows 500 --seed 42
-```
+A small generated example is committed at `data/synthetic/leads_sample.csv`.
+The generator and schema live in `src/lead_intelligence/data_generation.py` and
+`src/lead_intelligence/data_schema.py`.
 
-The command writes the public synthetic dataset to `data/synthetic/leads.csv`
-and generated analysis artifacts under `artifacts/`. The latter are ignored by
-Git because they can be reproduced from the committed code and seed.
-
-The model feature set deliberately excludes `status` and `loss_reason` because
-they are downstream outcomes and would leak information about conversion.
-
-See [Data pipeline](docs/DATA_PIPELINE.md) for the schema, generation rules,
-cleaning policy, and leakage safeguards.
+See [Synthetic data specification](docs/DATA_PIPELINE.md) for the schema,
+generation rules, privacy boundary, and current limitations.
 
 ## Repository boundaries
 
