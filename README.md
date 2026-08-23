@@ -103,7 +103,9 @@ or employee names, and free-text notes are not copied, masked, translated, or
 sampled.
 
 The reconstruction is therefore **aggregate-calibrated synthetic data**, not an
-anonymized copy of the original corporate dataset.
+anonymized copy of the original corporate dataset. Properties whose full public
+distribution is unavailable remain explicit approximations rather than inferred
+historical facts.
 
 Small matching examples are committed at:
 
