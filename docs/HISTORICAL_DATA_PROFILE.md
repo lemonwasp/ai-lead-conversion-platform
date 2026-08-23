@@ -129,12 +129,15 @@ The public raw data is visibly less clean than a typical tutorial dataset:
 - dozens of raw lead columns trigger mixed-type CSV warnings;
 - `Start_Date` remains an object column and contains mixed ISO and M/D/YYYY
   formatting;
+- raw examples include sentinel `End_Date` values such as `9999-12-31`;
 - 1,393 raw lead notes contain the literal placeholder `.`;
 - lead and note text appears in multiple languages;
 - the note table is one-to-many rather than one-row-per-lead.
 
 The reconstruction deliberately keeps several of these properties so later
-preprocessing has real engineering work to perform.
+preprocessing has real engineering work to perform. The public outputs do not
+quantify the sentinel-date frequency, so that property is documented but not yet
+statistically calibrated in the generator.
 
 ## Potential target leakage found in the historical workflow
 
@@ -167,7 +170,7 @@ public outputs:
 - full 181-column lead dictionary and every field's missingness;
 - full job-title distribution;
 - reason-code distribution;
-- exact date-format mixture and lead-duration distribution;
+- exact date-format, sentinel-date, and lead-duration distributions;
 - relationships/correlations between every pair of fields.
 
 Those approximations are kept explicit rather than being presented as historical
