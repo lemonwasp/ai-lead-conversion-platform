@@ -40,13 +40,13 @@ corporate data.
 
 ## Current status
 
-**Phase 1 — synthetic data and preprocessing**
+**Phase 1 — synthetic data, preprocessing, and EDA**
 
 - [x] Public/private data boundary documented
 - [x] Minimal API health endpoint and test added
 - [x] Synthetic CRM schema and deterministic generator
 - [x] Leakage-safe cleaning, lead-level split, and feature preprocessing
-- [ ] Reproducible EDA summary and diagnostic charts
+- [x] Reproducible EDA summary and diagnostic charts
 - [ ] Model baselines and experiment report
 - [ ] Prediction and explanation endpoints
 - [ ] React/TypeScript dashboard
@@ -64,33 +64,24 @@ python -m pip install -e ".[dev]"
 uvicorn lead_intelligence.api:app --reload
 ```
 
-Then open `http://127.0.0.1:8000/health`.
-
 Run the tests with:
 
 ```bash
 pytest
 ```
 
-## Synthetic CRM data
+## Rebuild the data workflow
 
-The public dataset is generated entirely from fixed, hand-authored statistical
-rules and a reproducible random seed. It does not read, mask, perturb, or sample
-records from the historical corporate dataset.
+```bash
+python scripts/run_data_pipeline.py --rows 500 --seed 42
+```
 
-A small generated example is committed at `data/synthetic/leads_sample.csv`.
+The command generates synthetic leads, applies structural cleaning, creates
+lead-disjoint train/test splits, and writes a compact EDA summary plus diagnostic
+charts under `artifacts/`.
 
-## Leakage-safe preprocessing
-
-The preprocessing workflow cleans structural problems, splits whole lead entities
-by `ObjectID`, and only then fits learned transformations such as imputation,
-scaling, and one-hot encoding on the training split.
-
-`status` and `loss_reason` are excluded from model inputs because they are
-downstream outcomes and would leak information about conversion.
-
-See [Data pipeline](docs/DATA_PIPELINE.md) for the generation and preprocessing
-rules.
+See [Data pipeline](docs/DATA_PIPELINE.md) for the generation, preprocessing, and
+EDA rules.
 
 ## Repository boundaries
 
