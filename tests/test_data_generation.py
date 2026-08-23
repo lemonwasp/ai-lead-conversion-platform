@@ -52,9 +52,6 @@ def test_default_profile_tracks_public_aggregate_rates() -> None:
     for label, expected in expected_status.items():
         assert abs(observed_status[label] - expected) < 0.015
 
-    observed_dot_rate = leads["Note"].fillna("").eq(".").mean()
-    assert abs(observed_dot_rate - RAW_DOT_NOTE_RATE) < 0.004
-
     assert (
         abs(
             leads["Sales_Unit_Name"].isna().mean()
@@ -69,6 +66,15 @@ def test_default_profile_tracks_public_aggregate_rates() -> None:
         )
         < 0.02
     )
+
+
+def test_dot_placeholder_rate_tracks_raw_aggregate() -> None:
+    generated = generate_synthetic_crm(100_000, seed=37)
+    observed_dot_rate = generated.leads["Note"].fillna("").eq(".").mean()
+
+    # At p ~= 1.6% and n = 100k, 0.0012 is about three standard errors.
+    # The previous conditional-draw bug missed the target by about 0.0017.
+    assert abs(observed_dot_rate - RAW_DOT_NOTE_RATE) < 0.0012
 
 
 def test_public_records_are_clearly_synthetic() -> None:
