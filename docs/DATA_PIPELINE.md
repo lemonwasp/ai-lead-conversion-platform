@@ -1,152 +1,148 @@
-# Historical-shape Synthetic CRM Specification
+# Calibrated Synthetic CRM Specification
 
-This document defines the public synthetic dataset used by the 2026 reconstruction.
-The records are newly generated, but the **table relationship and selected field
-names are grounded in the public 2024 hackathon notebooks** rather than a generic
-CRM schema invented for this repository.
+This document defines the privacy-safe synthetic data used by the 2026
+reconstruction. The public records are newly generated, while the schema,
+relationships, and selected statistical properties are calibrated from aggregate
+outputs visible in the public 2024 hackathon notebooks.
 
-## Historical grounding
+For the reconstructed source statistics and their provenance, see
+[Historical CRM Aggregate Profile](HISTORICAL_DATA_PROFILE.md).
 
-Public reference notebooks from the AICOSS/THU program:
+## Historical shape
 
-- [`leads.ipynb`](https://github.com/bjbak00/AICOSS_THU_Program/blob/4bb82ffe3bc58b81e9e4da923f59e02ab0786b3b/hackathon/codes_ex/leads.ipynb)
-- [`make_leads.ipynb`](https://github.com/bjbak00/AICOSS_THU_Program/blob/4bb82ffe3bc58b81e9e4da923f59e02ab0786b3b/hackathon/codes_ex/make_leads.ipynb)
+The public 2024 workflow shows:
 
-The public 2024 preprocessing example loaded two source tables:
+- `leads.csv`: 86,244 rows x 181 columns;
+- `lead_notes.csv`: 134,793 rows x 16 columns;
+- inner join on `ObjectID = ParentObjectID`;
+- earliest `Created_On` note selected per lead;
+- 78,759-row working cohort;
+- later reduced `Short*` datasets used for modeling experiments.
 
-- `leads.csv` — the wide lead-level CRM table;
-- `lead_notes.csv` — a one-to-many note/activity table.
-
-The notebook joined them with:
-
-- lead key: `ObjectID`;
-- note foreign key: `ParentObjectID`.
-
-After the join, the example selected the following workflow fields:
-
-`Name`, `Source_Text`, `Status_Text`, `Start_Date`, `End_Date`,
-`Owner_Party_Name`, `Sales_Unit_Name`, `Sales_Territory_Name`, `ObjectID`,
-`Created_On`, `Note`, and `Text`.
-
-The historical lead table shown in the public notebook was much wider (181
-columns). This reconstruction deliberately implements only the subset that was
-used by the public preprocessing workflow. It does **not** claim to recreate the
-entire corporate schema.
-
-The status labels `Converted`, `Unqualified`, and `Closed` are also visible in
-public notebook output. They are used as the minimal reconstruction set, not as
-an assertion that the source system contained only those statuses.
+The reconstruction therefore keeps **raw-like lead and note tables separate**.
+It does not pretend that the original project started from one clean modeling
+CSV.
 
 ## Public synthetic tables
 
 ### `leads`
 
-| Column | Purpose |
-| --- | --- |
-| `ObjectID` | Synthetic lead identifier |
-| `Name` | Clearly synthetic lead label |
-| `Source_Text` | Synthetic acquisition-source label |
-| `Status_Text` | Workflow status |
-| `Start_Date` | Synthetic lead start date |
-| `End_Date` | Synthetic lead end date |
-| `Owner_Party_Name` | Synthetic owner label |
-| `Sales_Unit_Name` | Synthetic sales-unit label |
-| `Sales_Territory_Name` | Synthetic territory label |
-| `Note` | Generic synthetic lead note |
+The generator includes only lead fields whose names/roles are visible in public
+notebook outputs. Examples include:
+
+- `ObjectID`, `Lead_ID`;
+- `Name`, `Name_Language_Code`, `Name_Language_Code_Text`;
+- account/contact labels;
+- `Contact_Information_Job_Title`;
+- `Status_Text`, `Reason_Code_Text`, `Source_Text`, `Priority_Text`;
+- `Start_Date`, `End_Date`;
+- owner, marketing, sales-unit, and territory fields;
+- lead-level `Note`.
+
+The historical raw lead table had 181 columns. Unknown fields are **not** padded
+with meaningless invented placeholders merely to reach 181 columns. Additional
+fields can be added as their public schema and behavior are recovered.
 
 ### `lead_notes`
 
-| Column | Purpose |
-| --- | --- |
-| `ParentObjectID` | Foreign key back to `leads.ObjectID` |
-| `Text` | Generic synthetic note/activity text |
-| `Created_On` | Synthetic note creation date |
+The public raw note export had 16 columns. The synthetic table recreates the 15
+semantic fields visible in the notebook and deliberately omits the CSV index
+artifact `Unnamed: 0`.
 
-The two tables therefore preserve the important historical relationship:
+Important fields include:
 
-`leads.ObjectID` → `lead_notes.ParentObjectID`
+- note `ObjectID`;
+- `ParentObjectID` and `HeaderObjectID`;
+- `Text`;
+- note type fields;
+- author fields;
+- `Created_On` and `Updated_On`.
 
-A lead can have multiple note rows, matching the one-to-many shape of the
-historical workflow.
+## Default calibration
 
-## Generation specification
+With `missing_rate=None`, `generate_synthetic_crm()` uses public aggregate facts
+rather than generic hand-authored percentages where those facts are available.
 
-`generate_synthetic_crm()` uses NumPy's seeded random number generator and
-returns both synthetic tables.
+Examples:
 
-What is historically grounded:
+- five historical workflow statuses, with Converted at approximately 7.74%;
+- all 39 observed `Source_Text` categories with their aggregate frequencies;
+- approximately 91.32% of leads receiving at least one note row;
+- approximately 1.71 note rows per matched lead on average;
+- field-specific working-cohort missingness, including approximately 61.79% for
+  `Sales_Unit_Name` and 51.06% for `Sales_Territory_Name`;
+- large, skewed synthetic pools reflecting observed cardinalities such as 1,108
+  owners, 104 sales units, and 397 territories;
+- mixed date formatting and dirty note placeholders observed in the public data;
+- lead-name language-code proportions from the raw notebook summary.
 
-- the two-table lead/note structure;
-- the `ObjectID` / `ParentObjectID` join relationship;
-- the selected field names used in the public notebook workflow;
-- the observed example status labels.
+`missing_rate` remains available as an explicit override for edge-case tests.
 
-What is deliberately synthetic and hand-authored:
+## What remains synthetic
 
-- category probabilities;
-- source labels;
-- owner, sales-unit, and territory labels;
-- date ranges and note counts;
-- free-text note templates;
-- missing-value rate.
+Calibration does **not** mean the historical rows were anonymized or copied.
+Every public record is newly generated.
 
-Those synthetic choices exist only to exercise the engineering pipeline. They
-are **not calibrated estimates of the historical customer population**.
+The generator does not read, mask, perturb, translate, sample, or memorize source
+customer rows. Generated identifiers and person/account/organization labels are
+explicitly synthetic. Free-text templates are newly written and do not copy the
+historical notes.
 
-The same lead count, seed, missing rate, and note-count settings reproduce the
-same synthetic tables.
+## What remains approximate
 
-## Privacy boundary
+Some original distributions are not fully recoverable from public notebook
+outputs. The current generator therefore documents, rather than hides, the
+remaining approximations:
 
-Public synthetic records must satisfy the repository's data policy:
+- exact note-count histogram;
+- every one of the 181 raw lead fields and their missingness;
+- full job-title and reason-code distributions;
+- exact date-format and duration distributions;
+- full multivariate correlations between fields.
 
-- no real customer, account, contact, employee, or company identifiers;
-- no copied, perturbed, translated, or masked historical rows;
-- no copied historical free-text notes;
-- no model artifact trained on the historical corporate dataset.
+As more public aggregate evidence is recovered, these parts can be calibrated
+without changing the privacy boundary.
 
-Every public identifier is prefixed with `SYNTH-`, and public names/organizational
-labels explicitly contain `Synthetic` so they cannot be mistaken for source
-records.
+## Historical preprocessing behavior to reproduce next
 
-## Conversion target
+The public `make_leads-Copy1.ipynb` workflow:
 
-The raw synthetic lead table does not add an invented `converted` column.
-Instead, later preprocessing can derive a binary target from the historically
-observed workflow field:
+1. selects `ParentObjectID`, `Text`, and `Created_On` from notes;
+2. inner-joins notes to leads by `ObjectID`;
+3. selects the working fields;
+4. groups by `ObjectID`;
+5. keeps the earliest `Created_On` row.
 
-- `Status_Text == "Converted"` → positive class;
-- other reconstructed statuses → negative class.
+That behavior belongs in the preprocessing milestone rather than this generator
+PR.
 
-Keeping the raw table close to the historical field shape makes the boundary
-between source-like data and modeling features explicit.
+A separate concern also needs to be handled there: public notebook examples
+indicate that some converted-lead note text represented post-conversion system
+events. Those fields can leak the target and must not be blindly used as
+predictors.
+
+## Reproducibility
+
+The generator uses NumPy's seeded RNG. Identical generator arguments reproduce
+identical synthetic lead and note tables.
 
 ## Validation in this milestone
 
-The synthetic-data tests verify that:
+Tests cover:
 
-- repeated calls with the same arguments reproduce both tables;
-- lead and note schemas match the documented reconstruction fields;
-- lead IDs are unique;
-- every note foreign key points to a generated lead;
-- statuses stay within the documented reconstruction set;
-- a binary conversion target can be derived from `Status_Text`;
-- public IDs, names, and note text are clearly marked synthetic.
+- deterministic regeneration;
+- lead and note schema contracts;
+- unique synthetic identifiers and valid foreign keys;
+- leads with no note rows;
+- approximate agreement with the public status and missingness profile on a
+  larger generated sample;
+- clearly synthetic public identifiers and labels;
+- invalid argument handling.
 
-Cleaning, train/test splitting, learned preprocessing, and EDA remain in
-follow-up pull requests so each engineering concern can be reviewed separately.
-
-## Sample data
+## Samples
 
 - `data/synthetic/leads_sample.csv`
 - `data/synthetic/lead_notes_sample.csv`
 
-Both samples are generated with seed `42`. They demonstrate the join shape while
-containing no source rows.
-
-## Limitations
-
-This milestone improves **structural fidelity**, not statistical fidelity.
-Without a privacy-approved aggregate profile of the historical dataset, the
-repository must not claim that its status frequencies, missingness, dates, note
-counts, or feature relationships match the real company data.
+Both are generated with seed `42`. They exist only for inspection and contain no
+historical source rows.
