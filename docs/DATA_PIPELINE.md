@@ -1,74 +1,72 @@
-# Synthetic CRM Data Specification
+# Synthetic Data and Preprocessing Pipeline
 
-This document defines the public synthetic dataset used by the 2026 reconstruction.
-The dataset is generated from code in this repository and is not derived from the
-historical corporate CRM export.
+This document defines the public dataset and preprocessing boundary used by the
+2026 reconstruction. The dataset is generated from code in this repository and is
+not derived from the historical corporate CRM export.
 
 ## Dataset schema
 
 | Column | Type | Purpose |
 | --- | --- | --- |
-| `ObjectID` | string | Synthetic lead identifier |
+| `ObjectID` | string | Synthetic lead identifier and entity-split key |
 | `source` | category | Lead acquisition channel |
 | `industry` | category | Synthetic company industry |
 | `company_size` | category | Small, mid-market, or enterprise segment |
 | `region` | category | Broad synthetic sales region |
-| `status` | category | Synthetic workflow outcome |
-| `loss_reason` | category | Synthetic loss reason |
+| `status` | category | Synthetic workflow outcome used for analysis only |
+| `loss_reason` | category | Synthetic loss reason used for analysis only |
 | `days_since_last_activity` | numeric | Recency of engagement |
 | `activity_count_30d` | numeric | Number of recent activities |
 | `email_open_rate` | numeric | Synthetic email engagement rate |
 | `website_visits_30d` | numeric | Recent website visits |
 | `has_phone` | boolean | Whether a synthetic contact route exists |
 | `note_length` | numeric | Length proxy, not real note content |
-| `converted` | binary | Future modeling target |
+| `converted` | binary | Modeling target |
 
-## Generation specification
+## Synthetic generation
 
-`generate_synthetic_leads()` uses NumPy's seeded random number generator. Every
-field is created from fixed, hand-authored rules:
+`generate_synthetic_leads()` uses NumPy's seeded random number generator and fixed,
+hand-authored distributions. It never reads historical customer data, identifiers,
+notes, or model artifacts. The same row count and seed reproduce the same dataset.
 
-- acquisition, industry, company-size, and region categories use fixed
-  probabilities;
-- activity and engagement metrics use synthetic probability distributions;
-- conversion probability is produced by a hand-authored latent logistic score;
-- outcome status and loss reason are generated only after the conversion target;
-- a small configurable missingness rate is injected into predictor columns.
+## Cleaning and validation
 
-The generator never reads historical files, customer identifiers, notes, or model
-artifacts. The same row count and seed reproduce the same dataset.
+`clean_lead_data()` performs structural cleaning only:
 
-## Privacy boundary
+- normalizes identifiers and categorical values;
+- converts unknown categories to `unknown`;
+- coerces and clips numeric values to documented public ranges;
+- normalizes boolean-like values;
+- removes invalid targets and duplicate IDs.
 
-Public synthetic records must satisfy the repository's data policy:
+It deliberately does not learn median or mode values. Learned imputation belongs
+inside the scikit-learn preprocessing graph and is fitted on the training split.
 
-- no real customer, account, contact, or company identifiers;
-- no copied, perturbed, translated, or masked historical records;
-- no real free-text notes;
-- no model artifact trained on the historical corporate dataset.
+`validate_clean_data()` verifies unique IDs, binary targets, allowed categories,
+and numeric bounds.
 
-`ObjectID` values are newly generated synthetic identifiers. `note_length` is only
-a numeric proxy and does not contain note text.
+## Leakage safeguards
 
-## Validation in this milestone
+The preprocessing workflow enforces three boundaries:
 
-The synthetic-data tests verify that:
+1. Split whole lead entities by `ObjectID` before fitting learned transformations.
+2. Exclude `status` and `loss_reason` from model inputs because they are downstream
+   outcomes.
+3. Fit median imputation, scaling, categorical imputation, and one-hot encoding on
+   training data only; reuse the fitted transformer for evaluation data.
 
-- the expected schema is produced;
-- generated IDs are unique;
-- the conversion target is binary;
-- repeated calls with the same seed reproduce the same records;
-- different seeds produce different records.
-
-Cleaning, train/test splitting, learned preprocessing, and EDA are intentionally
-left for follow-up pull requests so each engineering concern can be reviewed
-independently.
+The tests verify that train and test lead IDs are disjoint and that transformed
+outputs remain finite when synthetic predictors contain missing values.
 
 ## Sample data
 
 `data/synthetic/leads_sample.csv` contains a small generated example for repository
-inspection. It is synthetic and can be regenerated from the same documented
-specification.
+inspection.
+
+## Next step
+
+Exploratory summaries and plots are intentionally handled in a separate follow-up
+PR so data preparation and data analysis can be reviewed independently.
 
 ## Limitations
 
