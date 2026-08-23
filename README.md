@@ -40,12 +40,12 @@ corporate data.
 
 ## Current status
 
-**Phase 1 — synthetic data foundation**
+**Phase 1 — synthetic data and preprocessing**
 
 - [x] Public/private data boundary documented
 - [x] Minimal API health endpoint and test added
 - [x] Synthetic CRM schema and deterministic generator
-- [ ] Leakage-safe cleaning, lead-level split, and feature preprocessing
+- [x] Leakage-safe cleaning, lead-level split, and feature preprocessing
 - [ ] Reproducible EDA summary and diagnostic charts
 - [ ] Model baselines and experiment report
 - [ ] Prediction and explanation endpoints
@@ -79,11 +79,18 @@ rules and a reproducible random seed. It does not read, mask, perturb, or sample
 records from the historical corporate dataset.
 
 A small generated example is committed at `data/synthetic/leads_sample.csv`.
-The generator and schema live in `src/lead_intelligence/data_generation.py` and
-`src/lead_intelligence/data_schema.py`.
 
-See [Synthetic data specification](docs/DATA_PIPELINE.md) for the schema,
-generation rules, privacy boundary, and current limitations.
+## Leakage-safe preprocessing
+
+The preprocessing workflow cleans structural problems, splits whole lead entities
+by `ObjectID`, and only then fits learned transformations such as imputation,
+scaling, and one-hot encoding on the training split.
+
+`status` and `loss_reason` are excluded from model inputs because they are
+downstream outcomes and would leak information about conversion.
+
+See [Data pipeline](docs/DATA_PIPELINE.md) for the generation and preprocessing
+rules.
 
 ## Repository boundaries
 
