@@ -7,6 +7,11 @@ CRM schema invented for this repository.
 
 ## Historical grounding
 
+Public reference notebooks from the AICOSS/THU program:
+
+- [`leads.ipynb`](https://github.com/bjbak00/AICOSS_THU_Program/blob/4bb82ffe3bc58b81e9e4da923f59e02ab0786b3b/hackathon/codes_ex/leads.ipynb)
+- [`make_leads.ipynb`](https://github.com/bjbak00/AICOSS_THU_Program/blob/4bb82ffe3bc58b81e9e4da923f59e02ab0786b3b/hackathon/codes_ex/make_leads.ipynb)
+
 The public 2024 preprocessing example loaded two source tables:
 
 - `leads.csv` — the wide lead-level CRM table;
