@@ -40,12 +40,13 @@ corporate data.
 
 ## Current status
 
-**Phase 0 — repository and safety foundation**
+**Phase 1 — synthetic data and preprocessing**
 
 - [x] Public/private data boundary documented
 - [x] Minimal API health endpoint and test added
-- [ ] Synthetic CRM schema and generator
-- [ ] Leakage-safe feature pipeline
+- [x] Synthetic CRM schema and deterministic generator
+- [x] Leakage-safe cleaning, lead-level split, and feature preprocessing
+- [x] Reproducible EDA summary and diagnostic charts
 - [ ] Model baselines and experiment report
 - [ ] Prediction and explanation endpoints
 - [ ] React/TypeScript dashboard
@@ -70,6 +71,25 @@ Run the tests with:
 ```bash
 pytest
 ```
+
+## Rebuild the synthetic data pipeline
+
+Generate a deterministic public dataset, create train/test splits, and produce
+EDA artifacts:
+
+```bash
+python scripts/run_data_pipeline.py --rows 500 --seed 42
+```
+
+The command writes the public synthetic dataset to `data/synthetic/leads.csv`
+and generated analysis artifacts under `artifacts/`. The latter are ignored by
+Git because they can be reproduced from the committed code and seed.
+
+The model feature set deliberately excludes `status` and `loss_reason` because
+they are downstream outcomes and would leak information about conversion.
+
+See [Data pipeline](docs/DATA_PIPELINE.md) for the schema, generation rules,
+cleaning policy, and leakage safeguards.
 
 ## Repository boundaries
 
