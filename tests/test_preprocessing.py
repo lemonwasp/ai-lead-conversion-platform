@@ -8,6 +8,7 @@ from lead_intelligence.preprocessing import (
     TARGET_COLUMN,
     build_leakage_safe_modeling_table,
     reconstruct_historical_working_table,
+    split_by_object_id,
 )
 
 
@@ -62,3 +63,16 @@ def test_target_is_derived_before_leakage_prone_fields_are_removed() -> None:
         TARGET_COLUMN,
     ]
     assert set(LEAKAGE_EXCLUDED_COLUMNS).isdisjoint(MODEL_FEATURE_COLUMNS)
+
+
+def test_split_keeps_object_ids_disjoint_and_handles_singleton_target() -> None:
+    _, historical = _historical(200, 19)
+    modeling = build_leakage_safe_modeling_table(historical)
+    singleton = modeling.copy()
+    singleton[TARGET_COLUMN] = 0
+    singleton.loc[singleton.index[0], TARGET_COLUMN] = 1
+
+    train, test = split_by_object_id(singleton, test_size=0.2, seed=19)
+
+    assert len(train) + len(test) == len(singleton)
+    assert set(train[ID_COLUMN]).isdisjoint(set(test[ID_COLUMN]))

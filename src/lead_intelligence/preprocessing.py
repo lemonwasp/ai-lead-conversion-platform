@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import math
 from typing import Final
 
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 from lead_intelligence.data_schema import (
     CONVERTED_STATUS,
@@ -133,3 +135,53 @@ def build_leakage_safe_modeling_table(
         :,
         [ID_COLUMN, *MODEL_FEATURE_COLUMNS, TARGET_COLUMN],
     ].reset_index(drop=True)
+
+
+def split_by_object_id(
+    frame: pd.DataFrame,
+    *,
+    test_size: float = 0.20,
+    seed: int = 42,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Split whole lead entities before any learned preprocessing is fitted."""
+
+    _require_columns(
+        frame,
+        (ID_COLUMN, TARGET_COLUMN),
+        table_name="modeling",
+    )
+    if not 0.0 < test_size < 0.5:
+        raise ValueError("test_size must be between 0 and 0.5")
+    if frame[ID_COLUMN].isna().any() or not frame[ID_COLUMN].is_unique:
+        raise ValueError("ObjectID must be non-null and unique before splitting")
+
+    target = pd.to_numeric(frame[TARGET_COLUMN], errors="coerce")
+    if target.isna().any() or not set(target.unique()).issubset({0, 1}):
+        raise ValueError("converted must contain only 0 or 1")
+
+    counts = target.value_counts()
+    n_classes = len(counts)
+    n_test = math.ceil(len(frame) * test_size)
+    n_train = len(frame) - n_test
+    can_stratify = (
+        n_classes > 1
+        and counts.min() >= 2
+        and n_test >= n_classes
+        and n_train >= n_classes
+    )
+    stratify = target if can_stratify else None
+
+    train_ids, test_ids = train_test_split(
+        frame[ID_COLUMN],
+        test_size=test_size,
+        random_state=seed,
+        stratify=stratify,
+    )
+
+    train = frame[frame[ID_COLUMN].isin(train_ids)].reset_index(drop=True)
+    test = frame[frame[ID_COLUMN].isin(test_ids)].reset_index(drop=True)
+
+    if set(train[ID_COLUMN]).intersection(test[ID_COLUMN]):
+        raise RuntimeError("lead leakage detected between train and test splits")
+
+    return train, test
