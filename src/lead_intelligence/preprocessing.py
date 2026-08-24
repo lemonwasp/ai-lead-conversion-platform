@@ -5,8 +5,13 @@ from __future__ import annotations
 import math
 from typing import Final
 
+import numpy as np
 import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 from lead_intelligence.data_schema import (
     CONVERTED_STATUS,
@@ -185,3 +190,60 @@ def split_by_object_id(
         raise RuntimeError("lead leakage detected between train and test splits")
 
     return train, test
+
+
+def build_feature_preprocessor() -> ColumnTransformer:
+    """Build a transformer that is fitted on the training split only."""
+
+    categorical_pipeline = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="most_frequent")),
+            (
+                "one_hot",
+                OneHotEncoder(
+                    handle_unknown="infrequent_if_exist",
+                    min_frequency=5,
+                    sparse_output=False,
+                ),
+            ),
+        ]
+    )
+    numeric_pipeline = Pipeline(
+        steps=[
+            ("imputer", SimpleImputer(strategy="median")),
+            ("scaler", StandardScaler()),
+        ]
+    )
+
+    return ColumnTransformer(
+        transformers=[
+            (
+                "categorical",
+                categorical_pipeline,
+                list(MODEL_CATEGORICAL_COLUMNS),
+            ),
+            ("numeric", numeric_pipeline, list(MODEL_NUMERIC_COLUMNS)),
+        ],
+        remainder="drop",
+        verbose_feature_names_out=False,
+    )
+
+
+def model_matrix(frame: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+    """Return model inputs and labels while normalizing sklearn missing values."""
+
+    _require_columns(
+        frame,
+        (ID_COLUMN, *MODEL_FEATURE_COLUMNS, TARGET_COLUMN),
+        table_name="modeling",
+    )
+
+    features = frame.loc[:, MODEL_FEATURE_COLUMNS].copy()
+    for column in MODEL_CATEGORICAL_COLUMNS:
+        features[column] = features[column].astype(object)
+        features[column] = features[column].where(features[column].notna(), np.nan)
+    for column in MODEL_NUMERIC_COLUMNS:
+        features[column] = pd.to_numeric(features[column], errors="coerce")
+
+    target = frame[TARGET_COLUMN].astype("int8").copy()
+    return features, target

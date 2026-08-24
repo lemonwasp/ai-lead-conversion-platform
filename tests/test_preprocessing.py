@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 
 from lead_intelligence.data_generation import generate_synthetic_crm
@@ -6,7 +7,9 @@ from lead_intelligence.preprocessing import (
     LEAKAGE_EXCLUDED_COLUMNS,
     MODEL_FEATURE_COLUMNS,
     TARGET_COLUMN,
+    build_feature_preprocessor,
     build_leakage_safe_modeling_table,
+    model_matrix,
     reconstruct_historical_working_table,
     split_by_object_id,
 )
@@ -76,3 +79,20 @@ def test_split_keeps_object_ids_disjoint_and_handles_singleton_target() -> None:
 
     assert len(train) + len(test) == len(singleton)
     assert set(train[ID_COLUMN]).isdisjoint(set(test[ID_COLUMN]))
+
+
+def test_preprocessor_fits_train_only_and_handles_missing_values() -> None:
+    _, historical = _historical(500, 23)
+    modeling = build_leakage_safe_modeling_table(historical)
+    train, test = split_by_object_id(modeling, seed=23)
+    train_x, _ = model_matrix(train)
+    test_x, _ = model_matrix(test)
+
+    preprocessor = build_feature_preprocessor()
+    transformed_train = preprocessor.fit_transform(train_x)
+    transformed_test = preprocessor.transform(test_x)
+
+    assert transformed_train.shape[0] == len(train)
+    assert transformed_test.shape[0] == len(test)
+    assert np.isfinite(transformed_train.astype(float)).all()
+    assert np.isfinite(transformed_test.astype(float)).all()
