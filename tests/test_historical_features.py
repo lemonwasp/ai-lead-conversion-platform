@@ -30,6 +30,7 @@ EXPECTED_FINAL_FEATURE_COLUMNS = (
 
 
 def _historical_modeling_frame() -> pd.DataFrame:
+    """Build a synthetic modeling table with deliberately reversed feature order."""
     input_feature_order = tuple(reversed(EXPECTED_FINAL_FEATURE_COLUMNS))
     data = {
         column: [index, index + 100]
@@ -41,6 +42,7 @@ def _historical_modeling_frame() -> pd.DataFrame:
 
 
 def test_selects_only_recovered_final_features_and_target() -> None:
+    """Verify the selector preserves the independent 18-feature contract."""
     frame = _historical_modeling_frame()
 
     selected = select_final_modeling_columns(frame)
@@ -56,6 +58,7 @@ def test_selects_only_recovered_final_features_and_target() -> None:
 
 
 def test_requires_every_recovered_final_feature() -> None:
+    """Verify selection fails when one recovered historical feature is absent."""
     frame = _historical_modeling_frame().drop(columns=["Note_Label"])
 
     with pytest.raises(ValueError, match="Note_Label"):
