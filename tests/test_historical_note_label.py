@@ -9,6 +9,16 @@ from lead_intelligence.historical_note_label import (
     reconstruct_historical_note_label_inputs,
 )
 
+EXPECTED_HISTORICAL_NOTE_LABEL_PROMPT = (
+    "Classify the lead based on the information provided in the note as either "
+    "High Good, Good, Neutral, Bad, or High Bad in terms of its likelihood to "
+    "convert into an actual customer. If the lead appears highly likely to "
+    "convert and shows strong potential, label it as High Good; if it seems "
+    "likely to convert but with less certainty, label it as Good; if unsure, "
+    "label it as Neutral; if it seems unlikely to convert, label it as Bad; if "
+    "it shows strong indications of not converting, label it as High Bad.\n\n"
+)
+
 
 def test_reconstructs_combined_note_text_in_historical_order() -> None:
     """Verify the lead note and every related note are combined in source order."""
@@ -38,8 +48,10 @@ def test_reconstructs_combined_note_text_in_historical_order() -> None:
 def test_builds_exact_historical_prompt_prefix() -> None:
     """Verify the recovered GPT prompt is prepended without rewriting the note text."""
     combined = "Example lead note\n\nRelated note"
+
+    assert HISTORICAL_NOTE_LABEL_PROMPT == EXPECTED_HISTORICAL_NOTE_LABEL_PROMPT
     assert build_historical_note_label_message(combined) == (
-        HISTORICAL_NOTE_LABEL_PROMPT + combined
+        EXPECTED_HISTORICAL_NOTE_LABEL_PROMPT + combined
     )
 
 
