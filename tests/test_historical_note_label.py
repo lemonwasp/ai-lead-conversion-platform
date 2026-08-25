@@ -34,6 +34,8 @@ def test_reconstructs_combined_note_text_in_historical_order() -> None:
             "Text": ["First related", "Second related", None, "Third related"],
         }
     )
+    original_leads = leads.copy(deep=True)
+    original_notes = notes.copy(deep=True)
 
     reconstructed = reconstruct_historical_note_label_inputs(leads, notes)
 
@@ -43,6 +45,8 @@ def test_reconstructs_combined_note_text_in_historical_order() -> None:
     ]
     assert HISTORICAL_COMBINED_NOTE_COLUMN not in leads.columns
     assert notes["Text"].tolist() == ["First related", "Second related", None, "Third related"]
+    pd.testing.assert_frame_equal(leads, original_leads)
+    pd.testing.assert_frame_equal(notes, original_notes)
 
 
 def test_builds_exact_historical_prompt_prefix() -> None:
