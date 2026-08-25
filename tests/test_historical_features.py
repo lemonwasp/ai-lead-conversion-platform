@@ -7,11 +7,33 @@ from lead_intelligence.historical_features import (
 )
 from lead_intelligence.historical_target import HISTORICAL_TARGET_COLUMN
 
+EXPECTED_FINAL_FEATURE_COLUMNS = (
+    "Owner_Party_Name",
+    "Sales_Territory_Name",
+    "Name",
+    "Sales_Unit_Name",
+    "Source",
+    "Note_Label",
+    "Channel",
+    "Marketing_Unit_Name",
+    "Main_Contact_Person_Status",
+    "Priority_KUT",
+    "due_day",
+    "Account_Status",
+    "Approval_Status",
+    "Category",
+    "Sealing_Demand_Amount__Currency",
+    "Account_Information_County",
+    "Consistency_Status",
+    "Priority",
+)
+
 
 def _historical_modeling_frame() -> pd.DataFrame:
+    input_feature_order = tuple(reversed(EXPECTED_FINAL_FEATURE_COLUMNS))
     data = {
         column: [index, index + 100]
-        for index, column in enumerate(HISTORICAL_FINAL_FEATURE_COLUMNS)
+        for index, column in enumerate(input_feature_order)
     }
     data[HISTORICAL_TARGET_COLUMN] = [0, 1]
     data["unused_column"] = ["ignore", "ignore"]
@@ -23,9 +45,10 @@ def test_selects_only_recovered_final_features_and_target() -> None:
 
     selected = select_final_modeling_columns(frame)
 
-    assert len(HISTORICAL_FINAL_FEATURE_COLUMNS) == 18
+    assert HISTORICAL_FINAL_FEATURE_COLUMNS == EXPECTED_FINAL_FEATURE_COLUMNS
+    assert len(EXPECTED_FINAL_FEATURE_COLUMNS) == 18
     assert selected.columns.tolist() == [
-        *HISTORICAL_FINAL_FEATURE_COLUMNS,
+        *EXPECTED_FINAL_FEATURE_COLUMNS,
         HISTORICAL_TARGET_COLUMN,
     ]
     assert "unused_column" not in selected.columns
