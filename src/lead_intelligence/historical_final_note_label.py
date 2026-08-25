@@ -29,7 +29,11 @@ def recode_historical_final_note_label(raw_score: int | None) -> int:
     if raw_score is None:
         return HISTORICAL_FINAL_NOTE_LABEL_PLACEHOLDER
 
-    if isinstance(raw_score, bool) or raw_score not in HISTORICAL_RAW_TO_FINAL_NOTE_LABEL:
+    if (
+        isinstance(raw_score, bool)
+        or not isinstance(raw_score, int)
+        or raw_score not in HISTORICAL_RAW_TO_FINAL_NOTE_LABEL
+    ):
         raise ValueError(
             "historical raw note score must be one of 0, 1, 2, 3, 4 or None"
         )

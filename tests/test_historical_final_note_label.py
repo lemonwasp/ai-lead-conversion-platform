@@ -29,10 +29,10 @@ def test_marks_scores_not_incorporated_into_final_snapshot_with_five() -> None:
     assert recode_historical_final_note_label(None) == 5
 
 
-@pytest.mark.parametrize("unsupported", [-1, 5, 6, True])
+@pytest.mark.parametrize("unsupported", [-1, 5, 6, True, 1.0, []])
 def test_rejects_values_outside_the_historical_raw_score_contract(
-    unsupported: int,
+    unsupported: object,
 ) -> None:
     """Reject values that were not part of the recovered GPT raw 0-4 contract."""
     with pytest.raises(ValueError, match="0, 1, 2, 3, 4 or None"):
-        recode_historical_final_note_label(unsupported)
+        recode_historical_final_note_label(unsupported)  # type: ignore[arg-type]
