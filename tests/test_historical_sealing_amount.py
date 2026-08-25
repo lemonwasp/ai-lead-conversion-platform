@@ -46,11 +46,11 @@ def test_rejects_values_inside_unrecovered_cutoff_gap() -> None:
         recode_historical_sealing_amount(28_000_000.0)
 
 
-@pytest.mark.parametrize("unsupported", [-1.0, True, "1000"])
+@pytest.mark.parametrize("unsupported", [-1.0, True, "1000", float("inf")])
 def test_rejects_unsupported_historical_sealing_amount_values(
     unsupported: object,
 ) -> None:
-    """Reject negative and non-numeric values outside the recovered contract."""
+    """Reject negative, non-finite, and non-numeric values outside the recovered contract."""
     with pytest.raises(ValueError):
         recode_historical_sealing_amount(unsupported)
 

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 from numbers import Real
 from typing import Final
 
@@ -31,6 +32,8 @@ def recode_historical_sealing_amount(value: object) -> int:
         raise ValueError("historical sealing amount must be numeric or missing")
 
     amount = float(value)
+    if not math.isfinite(amount):
+        raise ValueError("historical sealing amount must be finite")
     if amount < 0:
         raise ValueError("historical sealing amount cannot be negative")
     if amount == 0:
