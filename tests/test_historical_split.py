@@ -56,6 +56,16 @@ def test_split_rejects_invalid_inputs() -> None:
     with pytest.raises(ValueError, match="missing required columns"):
         split_historical_modeling_table(missing_feature)
 
+    duplicate_feature = pd.concat(
+        [
+            _balanced_modeling_table().loc[:, [HISTORICAL_FINAL_FEATURE_COLUMNS[0]]],
+            _balanced_modeling_table(),
+        ],
+        axis=1,
+    )
+    with pytest.raises(ValueError, match="exactly the recovered 18 features"):
+        split_historical_modeling_table(duplicate_feature)
+
     missing_target = _balanced_modeling_table()
     missing_target.loc[0, HISTORICAL_TARGET_COLUMN] = None
     with pytest.raises(ValueError, match="target must not contain missing values"):
