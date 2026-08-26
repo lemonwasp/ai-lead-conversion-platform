@@ -47,6 +47,10 @@ def test_historical_xgboost_rejects_invalid_training_data() -> None:
     with pytest.raises(ValueError, match="equal rows"):
         fit_historical_xgboost_model(x_train.iloc[:-1], y_train)
 
+    misaligned_target = y_train.sample(frac=1.0, random_state=7)
+    with pytest.raises(ValueError, match="indexes must align"):
+        fit_historical_xgboost_model(x_train, misaligned_target)
+
     wrong_schema = x_train.rename(columns={HISTORICAL_FINAL_FEATURE_COLUMNS[0]: "wrong"})
     with pytest.raises(ValueError, match="recovered schema"):
         fit_historical_xgboost_model(wrong_schema, y_train)
