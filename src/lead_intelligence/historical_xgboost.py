@@ -1,4 +1,4 @@
-"""Train the reconstructed historical XGBoost classifier."""
+"""Train and use the reconstructed historical XGBoost classifier."""
 
 from __future__ import annotations
 
@@ -50,3 +50,28 @@ def fit_historical_xgboost_model(
     )
     model.fit(x_train, y_train.astype("int64"))
     return model
+
+
+def predict_historical_xgboost_labels(
+    model: XGBClassifier,
+    x_test: pd.DataFrame,
+) -> pd.Series:
+    """Predict historical target labels while preserving test-row indexes."""
+    if x_test.empty:
+        raise ValueError("historical XGBoost prediction data must not be empty")
+    if tuple(x_test.columns) != HISTORICAL_FINAL_FEATURE_COLUMNS:
+        raise ValueError("historical XGBoost features must match the recovered schema")
+
+    non_numeric = x_test.select_dtypes(exclude="number").columns.tolist()
+    if non_numeric:
+        raise ValueError("historical XGBoost features must be numeric")
+
+    predictions = pd.Series(
+        model.predict(x_test),
+        index=x_test.index,
+        name="predicted_label",
+        dtype="int64",
+    )
+    if not set(predictions.unique()).issubset(SUPPORTED_HISTORICAL_TARGETS):
+        raise ValueError("historical XGBoost predictions must contain only 0, 1, or 2")
+    return predictions
