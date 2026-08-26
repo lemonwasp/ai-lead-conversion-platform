@@ -4,6 +4,7 @@ from xgboost import XGBClassifier
 
 from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUMNS
 from lead_intelligence.historical_xgboost import (
+    extract_historical_xgboost_feature_importance,
     fit_historical_xgboost_model,
     predict_historical_xgboost_labels,
 )
@@ -107,3 +108,57 @@ def test_historical_xgboost_prediction_rejects_invalid_features() -> None:
     non_numeric[HISTORICAL_FINAL_FEATURE_COLUMNS[0]] = "text"
     with pytest.raises(ValueError, match="features must be numeric"):
         predict_historical_xgboost_labels(model, non_numeric)
+
+
+def test_historical_xgboost_extracts_labeled_feature_importance() -> None:
+    """Map fitted feature importances onto the recovered 18-feature schema."""
+    x_train, y_train = _historical_training_split()
+    model = fit_historical_xgboost_model(x_train, y_train, random_state=7)
+
+    importances = extract_historical_xgboost_feature_importance(model)
+
+    assert tuple(importances.index) == HISTORICAL_FINAL_FEATURE_COLUMNS
+    assert importances.name == "feature_importance"
+    assert importances.dtype == "float64"
+    assert len(importances) == len(HISTORICAL_FINAL_FEATURE_COLUMNS)
+    assert importances.notna().all()
+    assert (importances >= 0).all()
+
+
+def test_historical_xgboost_feature_importance_rejects_wrong_schema_size() -> None:
+    """Reject fitted models whose importance vector does not match 18 features."""
+    x_train, y_train = _historical_training_split()
+    wrong_model = XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        n_estimators=1,
+        max_depth=1,
+        eval_metric="mlogloss",
+        tree_method="hist",
+        random_state=7,
+        n_jobs=1,
+    )
+    wrong_model.fit(x_train.iloc[:, :-1], y_train)
+
+    with pytest.raises(ValueError, match="feature importance must match"):
+        extract_historical_xgboost_feature_importance(wrong_model)
+
+
+def test_historical_xgboost_feature_importance_rejects_reordered_features() -> None:
+    """Reject 18-feature models fitted with a different feature order."""
+    x_train, y_train = _historical_training_split()
+    reordered = x_train.loc[:, tuple(reversed(HISTORICAL_FINAL_FEATURE_COLUMNS))]
+    wrong_model = XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        n_estimators=1,
+        max_depth=1,
+        eval_metric="mlogloss",
+        tree_method="hist",
+        random_state=7,
+        n_jobs=1,
+    )
+    wrong_model.fit(reordered, y_train)
+
+    with pytest.raises(ValueError, match="feature names must match"):
+        extract_historical_xgboost_feature_importance(wrong_model)
