@@ -43,3 +43,11 @@ def test_historical_accuracy_rejects_invalid_labels() -> None:
     unsupported_pred.iloc[0] = 3
     with pytest.raises(ValueError, match="predicted labels must contain only"):
         calculate_historical_accuracy(y_true, unsupported_pred)
+
+    unhashable_true = pd.Series([[0], 1, 2], index=y_true.index, dtype="object")
+    with pytest.raises(ValueError, match="true labels must contain only"):
+        calculate_historical_accuracy(unhashable_true, y_pred)
+
+    unhashable_pred = pd.Series([[0], 1, 2], index=y_pred.index, dtype="object")
+    with pytest.raises(ValueError, match="predicted labels must contain only"):
+        calculate_historical_accuracy(y_true, unhashable_pred)
