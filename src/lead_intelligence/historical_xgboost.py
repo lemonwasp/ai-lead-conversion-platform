@@ -1,0 +1,52 @@
+"""Train the reconstructed historical XGBoost classifier."""
+
+from __future__ import annotations
+
+import pandas as pd
+from xgboost import XGBClassifier
+
+from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUMNS
+from lead_intelligence.historical_split import SUPPORTED_HISTORICAL_TARGETS
+
+
+def fit_historical_xgboost_model(
+    x_train: pd.DataFrame,
+    y_train: pd.Series,
+    *,
+    random_state: int = 42,
+) -> XGBClassifier:
+    """Fit a three-class XGBoost model on the recovered historical feature set."""
+    if x_train.empty or y_train.empty:
+        raise ValueError("historical XGBoost training data must not be empty")
+    if len(x_train) != len(y_train):
+        raise ValueError("historical XGBoost features and target must have equal rows")
+    if not x_train.index.equals(y_train.index):
+        raise ValueError("historical XGBoost features and target indexes must align")
+    if tuple(x_train.columns) != HISTORICAL_FINAL_FEATURE_COLUMNS:
+        raise ValueError("historical XGBoost features must match the recovered schema")
+    if y_train.isna().any():
+        raise ValueError("historical XGBoost target must not contain missing values")
+
+    observed_targets = set(y_train.unique())
+    if observed_targets != SUPPORTED_HISTORICAL_TARGETS:
+        raise ValueError("historical XGBoost target must contain classes 0, 1, and 2")
+
+    non_numeric = x_train.select_dtypes(exclude="number").columns.tolist()
+    if non_numeric:
+        raise ValueError("historical XGBoost features must be numeric")
+
+    model = XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        n_estimators=100,
+        max_depth=6,
+        learning_rate=0.3,
+        subsample=1.0,
+        colsample_bytree=1.0,
+        eval_metric="mlogloss",
+        tree_method="hist",
+        random_state=random_state,
+        n_jobs=1,
+    )
+    model.fit(x_train, y_train.astype("int64"))
+    return model
