@@ -10,6 +10,8 @@ from sklearn.model_selection import train_test_split
 from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUMNS
 from lead_intelligence.historical_target import HISTORICAL_TARGET_COLUMN
 
+SUPPORTED_HISTORICAL_TARGETS = frozenset({0, 1, 2})
+
 
 def split_historical_modeling_table(
     frame: pd.DataFrame,
@@ -30,10 +32,16 @@ def split_historical_modeling_table(
         )
     if frame.empty:
         raise ValueError("historical modeling table must not be empty")
-    if frame[HISTORICAL_TARGET_COLUMN].isna().any():
+
+    raw_target = frame[HISTORICAL_TARGET_COLUMN]
+    if raw_target.isna().any():
         raise ValueError("historical modeling target must not contain missing values")
 
-    class_counts = frame[HISTORICAL_TARGET_COLUMN].value_counts()
+    observed_targets = set(raw_target.unique())
+    if not observed_targets.issubset(SUPPORTED_HISTORICAL_TARGETS):
+        raise ValueError("historical modeling target must contain only 0, 1, or 2")
+
+    class_counts = raw_target.value_counts()
     if len(class_counts) < 2:
         raise ValueError("historical modeling target must contain at least two classes")
     if int(class_counts.min()) < 2:
@@ -50,12 +58,20 @@ def split_historical_modeling_table(
         )
 
     features = frame.loc[:, HISTORICAL_FINAL_FEATURE_COLUMNS].copy()
-    target = frame[HISTORICAL_TARGET_COLUMN].astype("int64").copy()
+    target = raw_target.astype("int64").copy()
 
-    return train_test_split(
+    x_train, x_test, y_train, y_test = train_test_split(
         features,
         target,
         test_size=test_size,
         random_state=random_state,
         stratify=target,
     )
+
+    expected_classes = set(target.unique())
+    if set(y_train.unique()) != expected_classes or set(y_test.unique()) != expected_classes:
+        raise ValueError(
+            "stratified split must preserve every target class in train and test"
+        )
+
+    return x_train, x_test, y_train, y_test
