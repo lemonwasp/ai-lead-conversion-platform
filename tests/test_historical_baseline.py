@@ -54,8 +54,10 @@ def test_split_is_deterministic_and_stratified() -> None:
     first = split_historical_modeling_table(frame, random_state=7)
     second = split_historical_modeling_table(frame, random_state=7)
 
-    for first_part, second_part in zip(first, second, strict=True):
-        pd.testing.assert_equal(first_part, second_part)
+    pd.testing.assert_frame_equal(first[0], second[0])
+    pd.testing.assert_frame_equal(first[1], second[1])
+    pd.testing.assert_series_equal(first[2], second[2])
+    pd.testing.assert_series_equal(first[3], second[3])
 
     _, _, y_train, y_test = first
     assert y_train.value_counts().sort_index().tolist() == [8, 8, 8]
