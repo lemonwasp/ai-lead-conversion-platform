@@ -87,6 +87,12 @@ def extract_historical_xgboost_feature_importance(
             "historical XGBoost feature importance must match the recovered schema"
         )
 
+    feature_names = getattr(model, "feature_names_in_", None)
+    if feature_names is None or tuple(feature_names) != HISTORICAL_FINAL_FEATURE_COLUMNS:
+        raise ValueError(
+            "historical XGBoost feature names must match the recovered schema"
+        )
+
     return pd.Series(
         importances,
         index=HISTORICAL_FINAL_FEATURE_COLUMNS,
