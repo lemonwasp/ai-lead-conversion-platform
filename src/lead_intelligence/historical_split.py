@@ -30,6 +30,11 @@ def split_historical_modeling_table(
             "historical modeling table is missing required columns: "
             + ", ".join(missing)
         )
+    if len(frame.columns) != len(required):
+        raise ValueError(
+            "historical modeling table must contain exactly the recovered "
+            "18 features and target"
+        )
     if frame.empty:
         raise ValueError("historical modeling table must not be empty")
 
