@@ -1,4 +1,4 @@
-"""Train and use the reconstructed historical XGBoost classifier."""
+"""Train, use, and inspect the reconstructed historical XGBoost classifier."""
 
 from __future__ import annotations
 
@@ -75,3 +75,21 @@ def predict_historical_xgboost_labels(
     if not set(predictions.unique()).issubset(SUPPORTED_HISTORICAL_TARGETS):
         raise ValueError("historical XGBoost predictions must contain only 0, 1, or 2")
     return predictions
+
+
+def extract_historical_xgboost_feature_importance(
+    model: XGBClassifier,
+) -> pd.Series:
+    """Return fitted XGBoost importances labeled with the recovered feature schema."""
+    importances = model.feature_importances_
+    if len(importances) != len(HISTORICAL_FINAL_FEATURE_COLUMNS):
+        raise ValueError(
+            "historical XGBoost feature importance must match the recovered schema"
+        )
+
+    return pd.Series(
+        importances,
+        index=HISTORICAL_FINAL_FEATURE_COLUMNS,
+        name="feature_importance",
+        dtype="float64",
+    )
