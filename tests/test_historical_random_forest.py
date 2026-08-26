@@ -58,7 +58,7 @@ def test_historical_random_forest_rejects_invalid_training_data() -> None:
 
     missing_target = y_train.astype("float64")
     missing_target.iloc[0] = None
-    with pytest.raises(ValueError, match="must not contain missing values"):
+    with pytest.raises(ValueError, match="target must not contain missing values"):
         fit_historical_random_forest_model(x_train, missing_target)
 
     missing_class = y_train.replace({2: 1})
@@ -74,3 +74,8 @@ def test_historical_random_forest_rejects_invalid_training_data() -> None:
     non_numeric[HISTORICAL_FINAL_FEATURE_COLUMNS[0]] = "text"
     with pytest.raises(ValueError, match="features must be numeric"):
         fit_historical_random_forest_model(non_numeric, y_train)
+
+    missing_feature = x_train.astype("float64")
+    missing_feature.iloc[0, 0] = None
+    with pytest.raises(ValueError, match="features must not contain missing values"):
+        fit_historical_random_forest_model(missing_feature, y_train)
