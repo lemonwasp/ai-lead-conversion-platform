@@ -20,6 +20,8 @@ def fit_historical_xgboost_model(
         raise ValueError("historical XGBoost training data must not be empty")
     if len(x_train) != len(y_train):
         raise ValueError("historical XGBoost features and target must have equal rows")
+    if not x_train.index.equals(y_train.index):
+        raise ValueError("historical XGBoost features and target indexes must align")
     if tuple(x_train.columns) != HISTORICAL_FINAL_FEATURE_COLUMNS:
         raise ValueError("historical XGBoost features must match the recovered schema")
     if y_train.isna().any():
