@@ -142,3 +142,23 @@ def test_historical_xgboost_feature_importance_rejects_wrong_schema_size() -> No
 
     with pytest.raises(ValueError, match="feature importance must match"):
         extract_historical_xgboost_feature_importance(wrong_model)
+
+
+def test_historical_xgboost_feature_importance_rejects_reordered_features() -> None:
+    """Reject 18-feature models fitted with a different feature order."""
+    x_train, y_train = _historical_training_split()
+    reordered = x_train.loc[:, tuple(reversed(HISTORICAL_FINAL_FEATURE_COLUMNS))]
+    wrong_model = XGBClassifier(
+        objective="multi:softprob",
+        num_class=3,
+        n_estimators=1,
+        max_depth=1,
+        eval_metric="mlogloss",
+        tree_method="hist",
+        random_state=7,
+        n_jobs=1,
+    )
+    wrong_model.fit(reordered, y_train)
+
+    with pytest.raises(ValueError, match="feature names must match"):
+        extract_historical_xgboost_feature_importance(wrong_model)
