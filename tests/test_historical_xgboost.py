@@ -3,7 +3,10 @@ import pytest
 from xgboost import XGBClassifier
 
 from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUMNS
-from lead_intelligence.historical_xgboost import fit_historical_xgboost_model
+from lead_intelligence.historical_xgboost import (
+    fit_historical_xgboost_model,
+    predict_historical_xgboost_labels,
+)
 
 
 def _historical_training_split() -> tuple[pd.DataFrame, pd.Series]:
@@ -68,3 +71,39 @@ def test_historical_xgboost_rejects_invalid_training_data() -> None:
     non_numeric[HISTORICAL_FINAL_FEATURE_COLUMNS[0]] = "text"
     with pytest.raises(ValueError, match="features must be numeric"):
         fit_historical_xgboost_model(non_numeric, y_train)
+
+
+def test_historical_xgboost_predicts_indexed_labels() -> None:
+    """Return supported target labels with the original test-row indexes."""
+    x_train, y_train = _historical_training_split()
+    model = fit_historical_xgboost_model(x_train, y_train, random_state=7)
+    x_test = x_train.iloc[[2, 5, 8]].copy()
+
+    predictions = predict_historical_xgboost_labels(model, x_test)
+
+    assert predictions.index.equals(x_test.index)
+    assert predictions.name == "predicted_label"
+    assert predictions.dtype == "int64"
+    assert len(predictions) == len(x_test)
+    assert set(predictions.unique()).issubset({0, 1, 2})
+
+
+def test_historical_xgboost_prediction_rejects_invalid_features() -> None:
+    """Reject empty, malformed, or non-numeric prediction feature tables."""
+    x_train, y_train = _historical_training_split()
+    model = fit_historical_xgboost_model(x_train, y_train)
+
+    with pytest.raises(ValueError, match="prediction data must not be empty"):
+        predict_historical_xgboost_labels(
+            model,
+            pd.DataFrame(columns=HISTORICAL_FINAL_FEATURE_COLUMNS),
+        )
+
+    wrong_schema = x_train.rename(columns={HISTORICAL_FINAL_FEATURE_COLUMNS[0]: "wrong"})
+    with pytest.raises(ValueError, match="recovered schema"):
+        predict_historical_xgboost_labels(model, wrong_schema)
+
+    non_numeric = x_train.copy()
+    non_numeric[HISTORICAL_FINAL_FEATURE_COLUMNS[0]] = "text"
+    with pytest.raises(ValueError, match="features must be numeric"):
+        predict_historical_xgboost_labels(model, non_numeric)
