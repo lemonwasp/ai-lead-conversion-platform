@@ -49,6 +49,10 @@ def fit_historical_random_forest_model(
     non_numeric = x_train.select_dtypes(exclude="number").columns.tolist()
     if non_numeric:
         raise ValueError("historical Random Forest features must be numeric")
+    if x_train.isna().any().any():
+        raise ValueError(
+            "historical Random Forest features must not contain missing values"
+        )
 
     model = RandomForestClassifier(
         n_estimators=100,
