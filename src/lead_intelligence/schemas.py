@@ -1,10 +1,12 @@
 """API schemas shared by endpoints and tests."""
 
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, FiniteFloat, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUMNS
+
+StrictFiniteFloat = Annotated[float, Field(strict=True, allow_inf_nan=False)]
 
 
 class HealthResponse(BaseModel):
@@ -17,7 +19,7 @@ class HealthResponse(BaseModel):
 class HistoricalPredictionRequest(BaseModel):
     """Validated historical XGBoost prediction input."""
 
-    features: dict[str, FiniteFloat]
+    features: dict[str, StrictFiniteFloat]
 
     @model_validator(mode="after")
     def validate_recovered_feature_schema(self) -> "HistoricalPredictionRequest":
