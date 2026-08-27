@@ -92,13 +92,16 @@ def test_historical_outreach_prompt_rejects_empty_context() -> None:
         )
 
 
-def test_historical_outreach_prompt_rejects_unsupported_label() -> None:
-    """Reject predictions outside the recovered three-class target."""
+@pytest.mark.parametrize("invalid_label", [True, False, 0.0, 1.0, 2.0, 3])
+def test_historical_outreach_prompt_rejects_invalid_label_types(
+    invalid_label: object,
+) -> None:
+    """Reject non-integer and unsupported historical prediction labels."""
     with pytest.raises(ValueError, match="0, 1, or 2"):
         build_historical_outreach_prompt(
             lead_name="Northstar Manufacturing",
             source="Industry event",
             sales_unit="Central Europe",
             priority="High",
-            predicted_label=3,
+            predicted_label=invalid_label,  # type: ignore[arg-type]
         )
