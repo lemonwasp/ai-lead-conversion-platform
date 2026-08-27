@@ -7,10 +7,7 @@ from httpx import ASGITransport, AsyncClient
 
 from lead_intelligence.api import app
 from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUMNS
-from lead_intelligence.historical_xgboost import (
-    fit_historical_xgboost_model,
-    predict_historical_xgboost_labels,
-)
+from lead_intelligence.historical_xgboost import fit_historical_xgboost_model
 
 _MISSING = object()
 
@@ -66,9 +63,7 @@ def test_historical_prediction_returns_supported_label() -> None:
         [[payload_features[column] for column in HISTORICAL_FINAL_FEATURE_COLUMNS]],
         columns=HISTORICAL_FINAL_FEATURE_COLUMNS,
     )
-    expected_label = int(
-        predict_historical_xgboost_labels(model, expected_frame).iloc[0]
-    )
+    expected_label = int(model.predict(expected_frame)[0])
 
     try:
         response = _post_prediction({"features": payload_features})
