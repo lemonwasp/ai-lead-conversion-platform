@@ -36,6 +36,7 @@ const predictionCopy: Record<
   },
 };
 
+/** Render the privacy-safe historical lead and prediction review fixture. */
 export function App() {
   const prediction = predictionCopy[reconstructionLead.predictedLabel];
 
