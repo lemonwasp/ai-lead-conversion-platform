@@ -73,6 +73,19 @@ def test_historical_prediction_rejects_wrong_schema() -> None:
     assert response.status_code == 422
 
 
+def test_historical_prediction_rejects_coerced_non_numeric_values() -> None:
+    """Reject numeric strings and booleans instead of coercing them to floats."""
+    for invalid_value in ("1.0", True):
+        features = {
+            column: 1.0 for column in HISTORICAL_FINAL_FEATURE_COLUMNS
+        }
+        features[HISTORICAL_FINAL_FEATURE_COLUMNS[0]] = invalid_value
+
+        response = _post_prediction({"features": features})
+
+        assert response.status_code == 422
+
+
 def test_historical_prediction_requires_loaded_model() -> None:
     """Return service unavailable when no reconstructed model is installed."""
     if hasattr(app.state, "historical_xgboost_model"):
