@@ -48,7 +48,7 @@ def build_historical_outreach_prompt(
         },
         ensure_ascii=False,
         sort_keys=True,
-    )
+    ).replace("<", "\\u003c")
 
     return (
         "Draft a concise customer-facing outreach message for a sales representative.\n"
