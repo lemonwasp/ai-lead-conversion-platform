@@ -33,7 +33,10 @@ def build_historical_outreach_prompt(
             "historical outreach context must not contain empty fields: "
             + ", ".join(empty_fields)
         )
-    if predicted_label not in HISTORICAL_CLASS_CONTEXT:
+    if (
+        type(predicted_label) is not int
+        or predicted_label not in HISTORICAL_CLASS_CONTEXT
+    ):
         raise ValueError("historical predicted label must be 0, 1, or 2")
 
     class_context = HISTORICAL_CLASS_CONTEXT[predicted_label]
