@@ -8,6 +8,7 @@ from lead_intelligence.historical_features import HISTORICAL_FINAL_FEATURE_COLUM
 
 StrictFiniteFloat = Annotated[float, Field(strict=True, allow_inf_nan=False)]
 StrictText = Annotated[str, Field(strict=True, min_length=1, max_length=200)]
+StrictHistoricalLabel = Annotated[int, Field(strict=True, ge=0, le=2)]
 
 
 class HealthResponse(BaseModel):
@@ -45,7 +46,7 @@ class HistoricalOutreachDraftRequest(BaseModel):
     source: StrictText
     sales_unit: StrictText
     priority: StrictText
-    predicted_label: Literal[0, 1, 2]
+    predicted_label: StrictHistoricalLabel
 
     @model_validator(mode="after")
     def validate_non_blank_context(self) -> "HistoricalOutreachDraftRequest":
