@@ -203,6 +203,7 @@ h1 {
 
 .draft-copy {
   margin-top: 24px;
+  min-height: 156px;
   padding: 22px;
   border: 1px solid #e3e7f0;
   border-radius: 16px;
@@ -211,8 +212,17 @@ h1 {
   line-height: 1.7;
 }
 
-.draft-copy p {
+.draft-text,
+.draft-status {
   margin-bottom: 0;
+}
+
+.draft-text {
+  white-space: pre-line;
+}
+
+.draft-status {
+  color: #53637c;
 }
 
 .outreach-note {
