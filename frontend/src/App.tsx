@@ -43,6 +43,7 @@ const predictionCopy: Record<
   },
 };
 
+/** Fetch one reviewable outreach draft for the current reconstruction lead. */
 async function fetchHistoricalOutreachDraft(signal: AbortSignal): Promise<string> {
   const response = await fetch("/historical/outreach-draft", {
     method: "POST",
