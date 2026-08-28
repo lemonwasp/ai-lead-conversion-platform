@@ -18,6 +18,13 @@ const reconstructionLead: LeadSummary = {
   predictedLabel: 2,
 };
 
+const reconstructionDraft =
+  `Hello ${reconstructionLead.name},\n\n` +
+  `I'm reaching out from our ${reconstructionLead.salesUnit} sales team regarding a lead ` +
+  `recorded through ${reconstructionLead.source}. If a conversation would be useful, we'd be ` +
+  "happy to arrange a follow-up at a convenient time.\n\n" +
+  "Best regards,\nSales team";
+
 const predictionCopy: Record<
   HistoricalPredictedLabel,
   { title: string; description: string }
@@ -36,7 +43,7 @@ const predictionCopy: Record<
   },
 };
 
-/** Render the privacy-safe historical lead and prediction review fixture. */
+/** Render the privacy-safe historical lead, prediction, and outreach fixture. */
 export function App() {
   const prediction = predictionCopy[reconstructionLead.predictedLabel];
 
@@ -48,7 +55,7 @@ export function App() {
             <p className="eyebrow">2024 reconstruction</p>
             <h1 id="dashboard-title">Lead conversion review</h1>
             <p className="intro">
-              Privacy-safe preview of the lead and prediction review flow.
+              Privacy-safe preview of the lead, prediction, and outreach review flow.
             </p>
           </div>
           <span className="fixture-label">Synthetic fixture</span>
@@ -90,6 +97,27 @@ export function App() {
           <footer className="prediction-note">
             <span>Historical class meaning</span>
             <p>{prediction.description}</p>
+          </footer>
+        </article>
+
+        <article className="outreach-card" aria-labelledby="outreach-title">
+          <div className="outreach-heading">
+            <div>
+              <p className="section-label">Outreach draft</p>
+              <h2 id="outreach-title">Customer message review</h2>
+            </div>
+            <span className="review-label">Human review required</span>
+          </div>
+
+          <div className="draft-copy" aria-label="Synthetic outreach draft">
+            {reconstructionDraft.split("\n").map((line, index) =>
+              line ? <p key={index}>{line}</p> : <br key={index} />,
+            )}
+          </div>
+
+          <footer className="outreach-note">
+            Synthetic reconstruction fixture only. This panel is not yet connected to
+            the outreach draft API.
           </footer>
         </article>
       </section>

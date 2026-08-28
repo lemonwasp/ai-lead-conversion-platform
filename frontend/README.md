@@ -4,19 +4,22 @@ React/TypeScript dashboard for the privacy-safe reconstruction.
 
 ## Current slice
 
-The first historical dashboard slice displays one synthetic lead and its recovered
-historical prediction label. It intentionally uses a local fixture so the UI
-contract can be reviewed independently from API wiring.
+The historical dashboard currently displays one synthetic lead, its recovered
+historical prediction label, and a synthetic customer-facing outreach draft.
+The UI remains fixture-driven so the review experience can be evaluated
+independently from API wiring.
 
 The screen currently shows:
 
 - synthetic lead identity;
 - source, sales unit, and priority;
-- predicted historical class label `0`, `1`, or `2`; and
-- the reconstructed class meaning.
+- predicted historical class label `0`, `1`, or `2`;
+- the reconstructed class meaning; and
+- a synthetic outreach draft marked for human review.
 
-It does **not** yet call `POST /historical/predict`, load live lead data, generate
-LLM drafts, or reproduce an exact 2024 visual design.
+It does **not** yet call `POST /historical/predict` or
+`POST /historical/outreach-draft`, load live lead data, send messages, or
+reproduce an exact 2024 visual design.
 
 ## Run locally
 
@@ -30,5 +33,5 @@ Use `npm run build` for TypeScript validation and a production Vite build.
 
 ## Next slice
 
-Connect the dashboard to the reconstructed prediction API without expanding the
-UI into message drafting or model-comparison features.
+Connect the outreach draft panel to `POST /historical/outreach-draft` without
+adding message sending or external-provider configuration to the frontend.
