@@ -19,9 +19,9 @@ const reconstructionLead: LeadSummary = {
 };
 
 const reconstructionDraft =
-  "Hello Northstar Manufacturing,\n\n" +
-  "I'm reaching out from our Central Europe sales team regarding a lead " +
-  "recorded through Industry event. If a conversation would be useful, we'd be " +
+  `Hello ${reconstructionLead.name},\n\n` +
+  `I'm reaching out from our ${reconstructionLead.salesUnit} sales team regarding a lead ` +
+  `recorded through ${reconstructionLead.source}. If a conversation would be useful, we'd be ` +
   "happy to arrange a follow-up at a convenient time.\n\n" +
   "Best regards,\nSales team";
 
