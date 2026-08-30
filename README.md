@@ -1,5 +1,7 @@
 # AI Lead Conversion Platform
 
+**English** | [日本語](README.ja.md)
+
 A privacy-safe reconstruction of a lead-conversion prototype developed during a
 2024 AI hackathon in Ulm, Germany.
 
