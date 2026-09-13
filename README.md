@@ -5,9 +5,10 @@
 A privacy-safe reconstruction of a lead-conversion prototype developed during a
 2024 AI hackathon in Ulm, Germany.
 
-The platform will combine a reproducible machine-learning pipeline, a prediction
-API, a web dashboard, and LLM-assisted outreach message generation. The public
-implementation uses synthetic CRM data only.
+The current 2026 reconstruction now includes the main product slices needed to
+review a synthetic lead, run a reconstructed historical prediction flow, and
+request a human-reviewed outreach draft without publishing the original
+corporate dataset or proprietary source code.
 
 > [!IMPORTANT]
 > The original 2024 prototype was a team project and received a hackathon award.
@@ -18,52 +19,73 @@ implementation uses synthetic CRM data only.
 ## Why this project exists
 
 Sales teams often have more leads than they can review manually. This project
-explores how a team could prioritize leads, understand the factors behind a
-prediction, and draft a reviewable outreach message without exposing personal or
-corporate data.
+explores how a team could prioritize leads, understand the evidence behind the
+reconstructed model flow, and draft a reviewable outreach message without
+exposing personal or corporate data.
 
-## Planned user flow
+## Current product flow
 
-1. Generate privacy-safe raw-like lead and lead-note data.
-2. Reconstruct the historical `ObjectID` -> `ParentObjectID` relationship.
-3. Reproduce the historical join/reduction workflow with leakage safeguards.
-4. Compare baseline, Random Forest, and XGBoost classifiers.
-5. Request a conversion prediction through a FastAPI endpoint.
-6. Review model evidence in a React/TypeScript dashboard.
-7. Generate an editable outreach draft through an optional LLM adapter.
+```text
+Synthetic CRM data
+  -> Historical preprocessing reconstruction
+  -> Recovered 18-feature modeling table
+  -> Reconstructed model training / prediction
+  -> FastAPI historical prediction boundary
+  -> React / TypeScript review dashboard
+  -> Human-reviewed outreach draft API
+```
 
-## Reconstruction goals
+The dashboard currently displays a synthetic lead and a fixture-backed historical
+prediction label, then loads an outreach draft from
+`POST /historical/outreach-draft`.
 
-- Ground the public schema and aggregate distributions in evidence visible in
-  public 2024 hackathon notebooks without publishing source records.
-- Preserve the distinction between wide raw CRM data and the smaller modeling
-  dataset rather than designing directly around today's feature subset.
-- Prevent entity and target leakage by splitting at lead level and excluding
-  post-outcome information.
-- Separate preprocessing fitted on training data from evaluation data.
-- Report macro-F1, recall, precision, ROC-AUC, and a confusion matrix in addition
-  to accuracy.
-- Treat generated messages as human-reviewed drafts, not autonomous decisions.
-- Keep the project reproducible with tests, Docker, and GitHub Actions.
+The frontend does **not** yet call `POST /historical/predict` directly, load live
+lead data, send messages, configure an external LLM provider, or reproduce the
+exact 2024 visual design.
 
-## Current status
-
-**Phase 1 - calibrated synthetic data foundation**
+## Implemented reconstruction slices
 
 - [x] Public/private data boundary documented
-- [x] Minimal API health endpoint and test added
 - [x] Historical lead/note raw shape and join relationship reconstructed
 - [x] Public aggregate CRM profile documented
 - [x] Privacy-safe synthetic generator calibrated to observed aggregate behavior
-- [ ] Historical join/reduction and leakage-safe preprocessing
-- [ ] Reproducible EDA summary and diagnostic charts
-- [ ] Model baselines and experiment report
-- [ ] Prediction and explanation endpoints
-- [ ] React/TypeScript dashboard
-- [ ] Optional LLM message adapter
-- [ ] Docker Compose and CI workflow
+- [x] Historical preprocessing stages reconstructed with explicit evidence boundaries
+- [x] Recovered 18-feature modeling table assembled
+- [x] Deterministic stratified train/test split
+- [x] Prior baseline model primitive
+- [x] Historical XGBoost training and label prediction primitives
+- [x] Historical XGBoost accuracy calculation and feature-importance extraction
+- [x] Historical Random Forest training primitive
+- [x] `POST /historical/predict` FastAPI endpoint
+- [x] React / TypeScript / Vite historical review dashboard
+- [x] Privacy-safe outreach prompt contract
+- [x] Deterministic local LLM-adapter fallback
+- [x] `POST /historical/outreach-draft` FastAPI endpoint
+- [x] Dashboard connection to the outreach-draft endpoint
+- [ ] Connect the dashboard prediction display to `POST /historical/predict`
+- [ ] Add a consolidated reproducible experiment report
+- [ ] Add broader model-comparison metrics and diagnostics
+- [ ] Add Docker Compose / CI workflow
+- [ ] Optional external LLM-provider integration behind the existing adapter boundary
 
-See [the roadmap](docs/ROADMAP.md) for the planned milestones.
+See [the roadmap](docs/ROADMAP.md) for planned milestones and the repository's
+historical-reconstruction boundaries.
+
+## Reconstruction principles
+
+- Ground the public schema and aggregate distributions in evidence visible in
+  public 2024 hackathon artifacts without publishing source records.
+- Preserve the distinction between wide raw CRM data and the smaller modeling
+  dataset rather than designing directly around today's feature subset.
+- Keep inferred historical behavior clearly labeled as inferred rather than
+  verified.
+- Prevent entity and target leakage by splitting at lead level and excluding
+  post-outcome information.
+- Keep preprocessing fitted on training data separate from evaluation data.
+- Treat generated customer messages as human-reviewed drafts, not autonomous
+  decisions.
+- Prefer reproducible tests and explicit evidence boundaries over unsupported
+  historical claims.
 
 ## Quick start
 
@@ -76,11 +98,22 @@ uvicorn lead_intelligence.api:app --reload
 
 Then open `http://127.0.0.1:8000/health`.
 
-Run the tests with:
+Run the Python tests with:
 
 ```bash
 pytest
 ```
+
+Run the dashboard separately:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+During local development, Vite proxies `/historical/*` requests to the FastAPI
+service on `http://127.0.0.1:8000`.
 
 ## Synthetic CRM data
 
@@ -100,8 +133,8 @@ properties from public aggregate notebook outputs, including:
   fields;
 - mixed date formatting, language proportions, and dirty note placeholders.
 
-All public records are still newly generated. Historical identifiers, customer
-or employee names, and free-text notes are not copied, masked, translated, or
+All public records are newly generated. Historical identifiers, customer or
+employee names, and free-text notes are not copied, masked, translated, or
 sampled.
 
 The reconstruction is therefore **aggregate-calibrated synthetic data**, not an
@@ -120,15 +153,19 @@ source evidence, calibration boundary, and remaining approximations.
 
 ## Repository boundaries
 
-- `src/lead_intelligence/`: Python application and ML code
+- `src/lead_intelligence/`: Python application, reconstruction, and ML code
 - `tests/`: automated tests
-- `frontend/`: planned React/TypeScript client
+- `frontend/`: React / TypeScript review dashboard
 - `data/synthetic/`: generated, non-identifying samples only
-- `docs/`: project history, data policy, and engineering decisions
+- `docs/`: project history, data policy, roadmap, and engineering decisions
 
 For the historical boundary and attribution policy, see
 [Original project context](docs/ORIGINAL_PROJECT.md). For handling rules, see the
 [Data and secrets policy](docs/DATA_POLICY.md).
+
+## Tech stack
+
+`Python` · `FastAPI` · `pandas` · `scikit-learn` · `XGBoost` · `React` · `TypeScript` · `Vite`
 
 ## License
 
